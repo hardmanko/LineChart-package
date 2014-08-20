@@ -1,0 +1,85 @@
+---
+title: "LineChart Package Intro"
+output:
+  html_document:
+    fig_width: 5
+  pdf_document: default
+---
+
+The LineChart package can be used for simple line graphs that have a continuous dependent variable, a continuous independent variable, and a categorical independent variable. Line graphs are very common in a lot of areas, such as poultry farming, so we will use the ChickWeight data set in our examples. The ChickWeight data set has weight measurements at 12 time points for each of 50 chicks which were assigned to 1 of 4 diet conditions. We want to plot weight as a function of time and diet, collapsing across chicks (we don't care about individual differences).
+
+```{r}
+library(LineChart)
+data(ChickWeight)
+plotLineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft")
+```
+
+As you can see, the main interface is very simple. Your provided data are aggregated to find the means, error bars are generated, the grouping variables are given a default appearance, the legend and axes are titled based on the names of the data sources, and everything is plotted. 
+
+There are a variety of things we can do to customize how the line graph is plotted. We can change what type of error bar is used (standard error, standard deviation, and 95\% confidence intervals can be calculated for you). We'll use 95\% confidence intervals. We can also add a title and change the axis labels.
+
+```{r}
+plotLineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", errBarType="CI95", title="Chick weight as a function of time and diet", xlab="Day", ylab="Chick weight")
+```
+
+For more control over the appearance of the different groups, you can modify the appearance settings. The diet conditions are numbered 1 through 4, so our groups to apply settings to are the numbers 1 through 4. Instead of using the diet numbers for symbols, we'll use the fillable plotting characters. We'll make all of the lines black, but fill the symbols with a rainbow of color.
+
+```{r}
+settings = buildGroupSettings(group=1:4, symbol=21:24, color="black", fillColor=rainbow(4))
+```
+
+`buildGroupSettings` complains about things that are left as defaults, but that can be stopped if the `suppressWarnings` argument is set to `TRUE`. The appearance settings are stored in a simple data frame with a number of columns with special names:
+
+```{r, echo=FALSE}
+settings
+```
+
+The `include` column specifies whether that group should be included in plots. The other settings control the appearance in straightforward ways. `color` sets the color for lines and symbols. If the symbol is fillable, `fillColor` sets the fill color. `symbol` and `cex.symbol` control the plotting character and the size of plotting characters, respectively. `lwd` and `lty` set the line width and type in the standard R fashion. `width.errBar` controls the width of the whiskers at the ends of the error bars. We can use these settings when calling `plotLineChart` by passing them to the `settings` argument.
+
+```{r}
+plotLineChart(weight ~ Time * Diet, ChickWeight, settings=settings, legendPosition="topleft")
+```
+
+Working with the plotting data frame directly
+---------------------------------------------
+
+`plotLineChart` uses a plotting data frame as part of its process, which is returned invisibly and can also be gotten from `createPlottingDf`. Using the plotting data frame directly allows for some advanced uses of the LineChart package. We start by getting a plotting data frame.
+
+```{r, plot=FALSE}
+plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, settings=settings)
+plotDf[ 1:5, ]
+```
+
+The plotting data frame has `x`, `y`, and `group` columns that specify the data to plot. The `y` column contains the average value of the dependent variable for the given combination of `x` and `group`. The `errBar` and `errBarLower` columns specify offsets from the `y` values at which error bars will be drawn.
+We can see that appearance settings have been applied to the plotting data frame. Those settings can later be extracted from a plotting data frame with `extractGroupSettings`. By working directly with the plotting data frame, we can do more than is possible just by using `plotLineChart`. 
+
+One thing we can do is maually specify different types of error bars than the standard build-in types, including asymmetrical and single-sided error bars. The two columns in the plotting data frame which control error bars are `errBar` and `errBarLower`. If both are `NULL`, `NA`, or 0, no error bars are drawn. If `errBarLower` is `NULL` or `NA`, `errBar` is used for both the upper and lower error bars. If `errBarLower` is used, it should be a negative value. If single-sided error bars are desired, simply set one of `errBar` or `errBarLower` to 0. This can, naturally, be done separately for individual groups.
+
+For this example, we will just use a subset of the data, diets 1 and 3. We'll make single-sided standard deviation error bars by zeroing out one side of the error bars for two different groups.
+
+```{r}
+ChickWeight = ChickWeight[ ChickWeight$Diet %in% c(1, 3), ]
+
+plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, errBarType="SD")
+
+plotDf[plotDf$group == 1, ]$errBar = 0
+plotDf[plotDf$group == 3, ]$errBarLower = 0
+
+lineChartDf(plotDf)
+```
+
+In the next example, we'll make asymmetrical error bars based based on quantiles. The values for `errBar` and `errBarLower` must be relative to the `y` value of the plotting data frame, so we will subtract `y` from both of them.
+
+```{r}
+quants = aggregate(weight ~ Time * Diet, ChickWeight, function(x) { quantile(x, c(.25, .75)) })
+
+plotDf$errBarLower = quants[,3][,1] - plotDf$y
+plotDf$errBar = quants[,3][,2] - plotDf$y
+
+lineChartDf(plotDf)
+legendFromPlottingDf("left", plotDf)
+```
+
+As you may have noticed, plots made by `lineChartDf` do not have a legend, so we added one with `legendFromPlottingDf`. If you do not have the plotting data frame, but just the appearance settings data frame, you can use `legendFromSettings` instead. If you want to get the settings from a plotting data frame, use `extractGroupSettings`.
+
+This document gives the gist of what is available in the package. The point of the package is to do basic line graphs well and with the minimum of effort. You can play around with the plotting data frame to get fairly specific results, or you can just use `plotLineChart` and see your data immediately with practically no effort.
