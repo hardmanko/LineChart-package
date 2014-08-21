@@ -1,12 +1,10 @@
 
 
 getSettingsDfCOlumnNames = function() {
-  c("group", "lty", "lwd", "symbol", "cex.symbol", "width.errBar",
-    "color", "fillColor", "include")
+  c("group", "lty", "lwd", "symbol", "cex.symbol", "width.errBar", "color", "fillColor", "include")
 }
 
 replaceMissingSettings = function(settings) {
-  
   gsn = getSettingsDfCOlumnNames()
   currentNames = names(settings)
   
@@ -24,7 +22,6 @@ replaceMissingSettings = function(settings) {
 }
 
 extendSettings = function(settings, group) {
-  
   allGroups = unique(c(settings$group, group))
   newSettings = buildGroupSettings(allGroups, suppressWarnings=TRUE)
   
@@ -92,7 +89,7 @@ drawConnectedPointsDf = function(plotDf) {
 #' @param data A data frame containing the data to be plotted.
 #' @param legendPosition The position at which the legend should be placed. If this is not NULL, it is passed through to legend directly.
 #' @param settings A data frame containing the appearance settings, such as returned by buildGroupSettings.
-#' @param errBarType The type of error bars to use. Can be one of "SE", "SD", or "95\%CI" for standard error, standard deviation, or 95\% confidence interval, respectively.
+#' @param errBarType The type of error bars to use. Can be one of "SE", "SD", or "CI95" for standard error, standard deviation, or 95\% confidence interval, respectively.
 #' @param title The title to place at the top of the plot.
 #' @param xlab The label to place on the x-axis. If NULL (default), the name of the source of data for the x-variable will be used.
 #' @param ylab The label to place on the y-axis. If NULL (default), the name of the source of data for the y-variable will be used.
@@ -144,7 +141,7 @@ plotLineChart = function(formula, data, legendPosition="topright", settings=NULL
                 plotXAxis=plotXAxis, plotYAxis=plotYAxis, lwd.axes=lwd.axes, add=add)
   
   if (!is.null(legendPosition)) {
-    if (!is.null(legendTitle) && legendTitle == "GROUP_NAME") {
+    if (!is.null(legendTitle) && (legendTitle == "GROUP_NAME")) {
       legendTitle = attr(plotDf, "originalNames", exact=TRUE)$group
     }
     legendFromPlottingDf(legendPosition, plotDf, title=legendTitle)
@@ -403,7 +400,14 @@ extractGroupSettings = function(plotDf) {
   replaceMissingSettings(settings)
 }
 
-applySettingsToPlotDf = function (settings, plotDf) {
+#' Apply appearance settings to a plotting data frame.
+#' 
+#' @param settings The appearance settings to apply.
+#' @param plotDf The plotting data frame to apply the settings to.
+#' @return A new plotting data frame with settings applied.
+#' 
+#' @export
+applySettingsToPlottingDf = function (settings, plotDf) {
   groupColumn = attr(plotDf, "varNames")$group
   
   groupNames = plotDf$group
@@ -428,9 +432,9 @@ applySettingsToPlotDf = function (settings, plotDf) {
 #' This function creates a data frame that can be used for plotting
 #' from a user-supplied data frame. The user data will be aggregated
 #' based on the formula. The resulting plotting data frame can be used 
-#' with lineChartDf.
+#' with `lineChartDf`.
 #' 
-#' @param formula The formula should be of the form y ~ x * group.
+#' @param formula The formula should be of the form `y ~ x * group` or `y ~ x`. `x` must come before `group`.
 #' @param data A data frame containing the data to be plotted.
 #' @param settings Plotting settings for the different groups in the data, such as the symbol to use.
 #' @param errBarType String. The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created.
@@ -441,13 +445,24 @@ createPlottingDf = function(formula, data, settings = NULL, errBarType = "SE") {
   mf = model.frame(formula=formula, data=data)
   
   plotDf = aggregate(formula, mf, mean)
-  attr(plotDf, "originalNames") = list(x = names(mf)[2],
-                                       group = names(mf)[3],
-                                       y = names(mf)[1])
-  names(plotDf) = c("x", "group", "y")
-  #for (col in names(plotDf)) {
-  #   plotDf[,col] = stripFactor(plotDf[,col])
-  #}
+  
+  if (ncol(mf) == 3) {
+    attr(plotDf, "originalNames") = list(x = names(mf)[2],
+                                         group = names(mf)[3],
+                                         y = names(mf)[1])
+    names(plotDf) = c("x", "group", "y")
+  } else if (ncol(mf) == 2) {
+    attr(plotDf, "originalNames") = list(x = names(mf)[2],
+                                         group = NULL,
+                                         y = names(mf)[1])
+    names(plotDf) = c("x", "y")
+    plotDf$group = "1"
+  }
+  
+  #attr(plotDf, "originalNames") = list(x = names(mf)[2],
+  #                                     group = names(mf)[3],
+  #                                     y = names(mf)[1])
+  #names(plotDf) = c("x", "group", "y")
   
   errorBarFunction = NULL
   
@@ -479,7 +494,7 @@ createPlottingDf = function(formula, data, settings = NULL, errBarType = "SE") {
   if (is.null(settings)) {
     settings = buildGroupSettings(plotDf$group, suppressWarnings=TRUE)
   }
-  plotDf = applySettingsToPlotDf(settings, plotDf)
+  plotDf = applySettingsToPlottingDf(settings, plotDf)
   
   plotDf
 }

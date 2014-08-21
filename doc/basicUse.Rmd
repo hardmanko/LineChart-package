@@ -1,9 +1,9 @@
 ---
 title: "LineChart Package Intro"
 output:
+  pdf_document: default
   html_document:
     fig_width: 5
-  pdf_document: default
 ---
 
 The LineChart package can be used for simple line graphs that have a continuous dependent variable, a continuous independent variable, and a categorical independent variable. Line graphs are very common in a lot of areas, such as poultry farming, so we will use the ChickWeight data set in our examples. The ChickWeight data set has weight measurements at 12 time points for each of 50 chicks which were assigned to 1 of 4 diet conditions. We want to plot weight as a function of time and diet, collapsing across chicks (we don't care about individual differences).
