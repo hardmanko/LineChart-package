@@ -6,7 +6,7 @@
 createPlottingDf(formula, data, settings = NULL, errBarType = "SE")
 }
 \arguments{
-\item{formula}{The formula should be of the form y ~ x * group.}
+\item{formula}{The formula should be of the form `y ~ x * group` or `y ~ x`. `x` must come before `group`.}
 
 \item{data}{A data frame containing the data to be plotted.}
 
@@ -21,6 +21,6 @@ A data frame which can be plotted with lineChartDf. See the documentation for li
 This function creates a data frame that can be used for plotting
 from a user-supplied data frame. The user data will be aggregated
 based on the formula. The resulting plotting data frame can be used
-with lineChartDf.
+with `lineChartDf`.
 }
 

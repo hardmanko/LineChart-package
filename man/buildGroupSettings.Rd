@@ -29,7 +29,7 @@ buildGroupSettings(group, color = NULL, fillColor = NULL, symbol = NULL,
 \item{suppressWarnings}{Boolean. By default you are warned about which settings are left at default values. Set to TRUE to suppress these warnings.}
 }
 \value{
-A data frame containing appearance setting data that can be used with plotLineChart for the settings argument.
+A data frame containing appearance setting data that can be used with lineChart for the settings argument.
 }
 \description{
 This function is the primary way to provide settings for the groups used in plotting.
@@ -42,6 +42,6 @@ library(LineChart)
 
 data(ChickWeight)
 settings = buildGroupSettings(group=1:4, symbol=21:24, color=c("red", "green", "orange", "blue"))
-plotLineChart( weight ~ Time * Diet, ChickWeight, legendPosition="topleft" )
+lineChart( weight ~ Time * Diet, ChickWeight, legendPosition="topleft" )
 }
 

@@ -6,9 +6,9 @@
 drawConnectedPointsDf(plotDf)
 }
 \arguments{
-\item{plotDf}{The data frame containing the data to be plotted. it must have several columns with specific names. See the return value of createPlottingDf for those column names.}
+\item{plotDf}{The data frame containing the data to be plotted. it must have several columns with specific names. See the return value of `createPlottingDf` for those column names.}
 }
 \description{
-Draw points specified by a plotting data frame with connect lines. This function is primarily for internal use within the LineChart package. If you want to add connected points to a plot, it will probably be easier to use plotLineChart with add = TRUE.
+Draw points specified by a plotting data frame with connect lines. This function is primarily for internal use within the LineChart package. If you want to add connected points to a plot, it will probably be easier to use lineChart with add = TRUE.
 }
 

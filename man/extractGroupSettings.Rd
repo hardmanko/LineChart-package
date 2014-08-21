@@ -16,7 +16,7 @@ Extract the appearance settings from a plotting data frame
 }
 \examples{
 data(ChickWeight)
-plotDf = plotLineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft")
+plotDf = lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft")
 
 #From a data frame used for plotting, extract the settings
 settings = extractGroupSettings(plotDf)
@@ -24,6 +24,6 @@ settings = extractGroupSettings(plotDf)
 settings$symbol = 21:24 #Make a small adjustment to the settings
 
 #Re-plot the data with new settings
-plotLineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
+lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
 }
 

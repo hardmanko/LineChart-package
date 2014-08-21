@@ -1,5 +1,4 @@
 
-
 getSettingsDfCOlumnNames = function() {
   c("group", "lty", "lwd", "symbol", "cex.symbol", "width.errBar", "color", "fillColor", "include")
 }
@@ -63,9 +62,9 @@ drawErrorBars = function(x, CI=c(mean-ciAmount, mean+ciAmount), width=.1*par()$c
 
 #' Draw points with connect lines.
 #' 
-#' Draw points specified by a plotting data frame with connect lines. This function is primarily for internal use within the LineChart package. If you want to add connected points to a plot, it will probably be easier to use plotLineChart with add = TRUE.
+#' Draw points specified by a plotting data frame with connect lines. This function is primarily for internal use within the LineChart package. If you want to add connected points to a plot, it will probably be easier to use lineChart with add = TRUE.
 #'
-#' @param plotDf The data frame containing the data to be plotted. it must have several columns with specific names. See the return value of createPlottingDf for those column names.
+#' @param plotDf The data frame containing the data to be plotted. it must have several columns with specific names. See the return value of `createPlottingDf` for those column names.
 #' 
 #' @export
 drawConnectedPointsDf = function(plotDf) {
@@ -108,27 +107,30 @@ drawConnectedPointsDf = function(plotDf) {
 #' @examples
 #' #Basic use case: Plotting data frame with default appearance.
 #' data(ChickWeight)
-#' plotLineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft")
+#' lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft")
 #' 
 #' #You can modify the appearance of groups by providing group settings:
 #' settings = buildGroupSettings(group=1:4, symbol=21:24, lty=1:4)
-#' plotLineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
+#' lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
 #' 
 #' #Let's ignore group 3
 #' settings[ settings$group == 3, "include" ] = FALSE 
-#' plotLineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
+#' lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
 #' 
 #' #If for whatever reason you have data in two different data frames that you 
 #' #want in the same plot, use add=TRUE to add to the existing plot.
 #' cw12 = ChickWeight[ ChickWeight$Diet %in% 1:2, ]
 #' cw34 = ChickWeight[ ChickWeight$Diet %in% 3:4, ]
 #' 
-#' settings$fillColor = c("white", "white", "black", "black") #Distinguish between the groups by fill color.
+#' #Distinguish between the groups by fill color.
+#' settings$fillColor = c("white", "white", "black", "black") 
 #' settings$include = TRUE #Include all groups
 #' 
-#' plotLineChart(weight ~ Time * Diet, cw12, legendPosition="topleft", settings=settings, ylim=c(40,300))
-#' plotLineChart(weight ~ Time * Diet, cw34, legendPosition="bottomright", settings=settings, add=TRUE)
-plotLineChart = function(formula, data, legendPosition="topright", settings=NULL,
+#' lineChart(weight ~ Time * Diet, cw12, legendPosition="topleft", 
+#'   settings=settings, ylim=c(40,300))
+#' lineChart(weight ~ Time * Diet, cw34, legendPosition="bottomright", 
+#'   settings=settings, add=TRUE)
+lineChart = function(formula, data, legendPosition="topright", settings=NULL,
                            errBarType = "SE",
                            title="", xlab=NULL, ylab=NULL, legendTitle="GROUP_NAME", 
                            xlim=NULL, ylim=NULL,
@@ -153,7 +155,7 @@ plotLineChart = function(formula, data, legendPosition="topright", settings=NULL
 #' Plot data using a plotting data frame
 #' 
 #' This function uses a data frame with the same format as one created by createPlottingDf.
-#' This is mainly an internal function that is called by plotLineChart, but it can be called
+#' This is mainly an internal function that is called by lineChart, but it can be called
 #' directly if more control of plotDf is desired.
 #' 
 #' 
@@ -298,7 +300,7 @@ lineChartDf = function(plotDf,
 #' @param include Boolean. Should this group be included in plots?
 #' @param suppressWarnings Boolean. By default you are warned about which settings are left at default values. Set to TRUE to suppress these warnings.
 #' 
-#' @return A data frame containing appearance setting data that can be used with plotLineChart for the settings argument.
+#' @return A data frame containing appearance setting data that can be used with lineChart for the settings argument.
 #' 
 #' @export
 #' 
@@ -307,7 +309,7 @@ lineChartDf = function(plotDf,
 #' 
 #' data(ChickWeight)
 #' settings = buildGroupSettings(group=1:4, symbol=21:24, color=c("red", "green", "orange", "blue"))
-#' plotLineChart( weight ~ Time * Diet, ChickWeight, legendPosition="topleft" )
+#' lineChart( weight ~ Time * Diet, ChickWeight, legendPosition="topleft" )
 buildGroupSettings = function(group, color=NULL, fillColor=NULL, symbol=NULL,
                               cex.symbol=NULL, width.errBar=NULL, lty=NULL, lwd=NULL,
                               include=NULL, suppressWarnings=FALSE) 
@@ -385,7 +387,7 @@ buildGroupSettings = function(group, color=NULL, fillColor=NULL, symbol=NULL,
 #' 
 #' @examples
 #' data(ChickWeight)
-#' plotDf = plotLineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft")
+#' plotDf = lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft")
 #' 
 #' #From a data frame used for plotting, extract the settings
 #' settings = extractGroupSettings(plotDf)
@@ -393,7 +395,7 @@ buildGroupSettings = function(group, color=NULL, fillColor=NULL, symbol=NULL,
 #' settings$symbol = 21:24 #Make a small adjustment to the settings
 #' 
 #' #Re-plot the data with new settings
-#' plotLineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
+#' lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
 extractGroupSettings = function(plotDf) {
   agg = aggregate(plotDf, list(plotDf$group), function(x) {x[1]})
   settings = subset(agg, select=getSettingsDfCOlumnNames())
@@ -531,6 +533,3 @@ legendFromSettings = function(position, settings, ...) {
          horiz = ifelse(is.null(vargs$horiz), FALSE, vargs$horiz)  
   )
 }
-
-
-

@@ -30,7 +30,7 @@ lineChartDf(plotDf, title = "", xlab = NULL, ylab = NULL, ylim = NULL,
 }
 \description{
 This function uses a data frame with the same format as one created by createPlottingDf.
-This is mainly an internal function that is called by plotLineChart, but it can be called
+This is mainly an internal function that is called by lineChart, but it can be called
 directly if more control of plotDf is desired.
 }
 \details{
