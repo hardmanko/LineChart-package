@@ -6,13 +6,13 @@
 createPlottingDf(formula, data, settings = NULL, errBarType = "SE")
 }
 \arguments{
-\item{formula}{The formula should be of the form `y ~ x * group` or `y ~ x`. `x` must come before `group`.}
+\item{formula}{The formula should be of the form `y ~ x` or `y ~ x * g1 * g2 * ... * gK`, where the `gN` are any number of grouping variables and 'y', 'x', and 'gi' are the names of columns in `data`. If grouping variables are used, `x` must come before them.}
 
-\item{data}{A data frame containing the data to be plotted.}
+\item{data}{A data frame containing the data to be used in creation of the plotting data frame.}
 
 \item{settings}{Plotting settings for the different groups in the data, such as the symbol to use.}
 
-\item{errBarType}{String. The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created.}
+\item{errBarType}{The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created. If a function is supplied, the function should take one argument, which will be the data used to plot a single data point, and return two error bar amounts. These amounts should be the signed difference between the end of the error bar and the mean of the data for that data point.}
 }
 \value{
 A data frame which can be plotted with lineChartDf. See the documentation for lineChartDf for examples.
@@ -22,5 +22,20 @@ This function creates a data frame that can be used for plotting
 from a user-supplied data frame. The user data will be aggregated
 based on the formula. The resulting plotting data frame can be used
 with `lineChartDf`.
+}
+\details{
+Note that if no grouping variables are supplied by the formula, a `group` column
+will still be made in the resulting data frame and the group name will be the number 0.
+}
+\examples{
+data(ChickWeight)
+
+#Example of a user-defined error bar function:
+quartiles = function(x) {
+ as.numeric(quantile(x - mean(x), c(0.25, 0.75)))
+}
+
+plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, errBarType=quartiles)
+lineChartDf(plotDf)
 }
 

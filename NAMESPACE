@@ -3,7 +3,6 @@
 export(applySettingsToPlottingDf)
 export(buildGroupSettings)
 export(createPlottingDf)
-export(drawConnectedPointsDf)
 export(extractGroupSettings)
 export(legendFromPlottingDf)
 export(legendFromSettings)

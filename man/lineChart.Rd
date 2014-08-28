@@ -9,23 +9,23 @@ lineChart(formula, data, legendPosition = "topright", settings = NULL,
   plotXAxis = TRUE, plotYAxis = TRUE, lwd.axes = par()$lwd, add = FALSE)
 }
 \arguments{
-\item{formula}{A formula of the form "y ~ x * group", where "y", "x", and "group" are names of columns in `data`.}
-
-\item{data}{A data frame containing the data to be plotted.}
-
 \item{legendPosition}{The position at which the legend should be placed. If this is not NULL, it is passed through to legend directly.}
 
-\item{settings}{A data frame containing the appearance settings, such as returned by buildGroupSettings.}
+\item{legendTitle}{The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use NULL.}
 
-\item{errBarType}{The type of error bars to use. Can be one of "SE", "SD", or "CI95" for standard error, standard deviation, or 95\% confidence interval, respectively.}
+\item{formula}{The formula should be of the form `y ~ x` or `y ~ x * g1 * g2 * ... * gK`, where the `gN` are any number of grouping variables and 'y', 'x', and 'gi' are the names of columns in `data`. If grouping variables are used, `x` must come before them.}
+
+\item{data}{A data frame containing the data to be used in creation of the plotting data frame.}
+
+\item{settings}{Plotting settings for the different groups in the data, such as the symbol to use.}
+
+\item{errBarType}{The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created. If a function is supplied, the function should take one argument, which will be the data used to plot a single data point, and return two error bar amounts. These amounts should be the signed difference between the end of the error bar and the mean of the data for that data point.}
 
 \item{title}{The title to place at the top of the plot.}
 
-\item{xlab}{The label to place on the x-axis. If NULL (default), the name of the source of data for the x-variable will be used.}
+\item{xlab}{The label to place on the x-axis. If NULL (default), the name of the source of data for the x-variable will be used, if available.}
 
-\item{ylab}{The label to place on the y-axis. If NULL (default), the name of the source of data for the y-variable will be used.}
-
-\item{legendTitle}{The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use NULL.}
+\item{ylab}{The label to place on the y-axis. If NULL (default), the name of the source of data for the y-variable will be used if available.}
 
 \item{xlim}{The plotting range of the x-axis.}
 
@@ -71,5 +71,8 @@ lineChart(weight ~ Time * Diet, cw12, legendPosition="topleft",
   settings=settings, ylim=c(40,300))
 lineChart(weight ~ Time * Diet, cw34, legendPosition="bottomright",
   settings=settings, add=TRUE)
+}
+\seealso{
+\code{\link{createPlottingDf}}, \code{\link{lineChartDf}}, \code{\link{buildGroupSettings}}, \code{\link{extractGroupSettings}}, \code{\link{applySettingsToPlottingDf}}, \code{\link{legendFromPlottingDf}}, \code{\link{legendFromSettings}}
 }
 
