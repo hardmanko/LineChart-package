@@ -22,5 +22,8 @@ Description: Plots standard line charts for data for which there is a
     result is quite easy to use for that purpose.
 Depends:
     R (>= 3.0.0)
+Suggests:
+    R.rsp
+VignetteBuilder: R.rsp
 License: MIT + file LICENSE
 LazyData: true

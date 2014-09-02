@@ -1,4 +1,13 @@
 
+#' Open the introductory manual for the LineChart package.
+#' 
+#' This function open the introductory manual/vignettes.
+#' 
+#' @export
+lineChartManual = function() {
+  vignette("introduction", package="LineChart")
+}
+
 #' Plot data with a line chart
 #' 
 #' This function is the primary interface to the LineChart package.

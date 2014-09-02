@@ -1,5 +1,5 @@
 ---
-title: "LineChart Package Intro"
+title: "LineChart Package Introduction"
 output:
   pdf_document: default
   html_document:
