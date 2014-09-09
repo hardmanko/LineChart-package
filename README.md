@@ -1,7 +1,7 @@
 LineChart-package
 =================
 
-This is a simple package that plots line charts in R. The introductory vignettes are in the `/doc` folder in pdf and html form. It's just a few pages and describes pretty much the whole package.
+This is a simple package that plots line charts in R. The introductory vignettes are in the `/vignettes` folder in pdf form. It's just a few pages and describes pretty much the whole package.
 
 Installation
 ------------
