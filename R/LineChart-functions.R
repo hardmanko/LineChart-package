@@ -17,7 +17,7 @@ lineChartManual = function() {
 #' 
 #' @param legendPosition The position at which the legend should be placed. If this is not NULL, it is passed through to legend directly.
 #' @param legendTitle The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use NULL.
-#' 
+#' @params ... Additional parameters, currently passed on to the legend creating functions.
 #' 
 #' @return The plotting data frame that was used is returned invisibly.
 #' 
@@ -52,11 +52,12 @@ lineChartManual = function() {
 #' lineChart(weight ~ Time * Diet, cw34, legendPosition="bottomright", 
 #'   settings=settings, add=TRUE)
 lineChart = function(formula, data, legendPosition="topright", settings=NULL,
-                           errBarType = "SE",
-                           title="", xlab=NULL, ylab=NULL, legendTitle="GROUP_NAME", 
-                           xlim=NULL, ylim=NULL,
-                           plotXAxis=TRUE, plotYAxis=TRUE,
-                           lwd.axes=par()$lwd, add=FALSE) 
+                     errBarType = "SE",
+                     title="", xlab=NULL, ylab=NULL, legendTitle="GROUP_NAME", 
+                     xlim=NULL, ylim=NULL,
+                     plotXAxis=TRUE, plotYAxis=TRUE,
+                     lwd.axes=par()$lwd, add=FALSE,
+                     ...) 
 {
   plotDf = createPlottingDf(formula, data, settings=settings, errBarType=errBarType)
   
@@ -67,7 +68,7 @@ lineChart = function(formula, data, legendPosition="topright", settings=NULL,
     if (!is.null(legendTitle) && (legendTitle == "GROUP_NAME")) {
       legendTitle = attr(plotDf, "originalNames", exact=TRUE)$group
     }
-    legendFromPlottingDf(legendPosition, plotDf, title=legendTitle)
+    legendFromPlottingDf(legendPosition, plotDf, title=legendTitle, ...=...)
   }
   invisible(plotDf)
 }
@@ -155,7 +156,7 @@ createPlottingDf = function(formula, data, settings = NULL, errBarType = "SE") {
       } else if (errBarType == "CI95") {
         errorBarFunction = function(x) {
           t = t.test(x, conf.level=.95)
-          as.numeric(t$conf.int - t$estimate)
+          y = as.numeric(t$conf.int - t$estimate)
         }
       } else if (errBarType == "SD") {
         errorBarFunction = function(x) { y = sqrt(var(x)); c(-y, y) }
@@ -170,7 +171,9 @@ createPlottingDf = function(formula, data, settings = NULL, errBarType = "SE") {
     #plotDf$errBar = aggregate(formula, mf, errorBarFunction)[,names(mf)[1]]
     
     errBars = aggregate(formula, mf, errorBarFunction)[,names(mf)[1]]
+    errBars[is.na(errBars)] = 0
     
+    #If the ordering of the error bars is wrong, swap lower and upper
     errBars[ errBars[,1] > errBars[,2], c(1,2) ] = errBars[ errBars[,1] > errBars[,2], c(2,1) ]
     
     plotDf$errBarLower = errBars[,1]
@@ -324,6 +327,7 @@ lineChartDf = function(plotDf,
 #' not specified.
 #' 
 #' @param group The indentifiers for the groups.
+#' @param altName An alternative name to use in legends, instead of 'group'. If provided and some values are NA, those values will be replaced with the group name.
 #' @param color The color to be used for the symbols and lines.
 #' @param fillColor The fill color to be used in case the symbols are of a fillable type (e.g. 21:25).
 #' @param symbol The plotting character to use.
@@ -344,7 +348,7 @@ lineChartDf = function(plotDf,
 #' data(ChickWeight)
 #' settings = buildGroupSettings(group=1:4, symbol=21:24, color=c("red", "green", "orange", "blue"))
 #' lineChart( weight ~ Time * Diet, ChickWeight, legendPosition="topleft" )
-buildGroupSettings = function(group, color=NULL, fillColor=NULL, symbol=NULL,
+buildGroupSettings = function(group, altName=NULL, color=NULL, fillColor=NULL, symbol=NULL,
                               cex.symbol=NULL, width.errBar=NULL, lty=NULL, lwd=NULL,
                               include=NULL, suppressWarnings=FALSE) 
 {
@@ -352,6 +356,12 @@ buildGroupSettings = function(group, color=NULL, fillColor=NULL, symbol=NULL,
   ng = length(group)
   
   usedDefaults = NULL
+  
+  if (is.null(altName)) {
+    altName = group
+  } else {
+    altName[ is.na(altName) ] = group[ is.na(altName) ]
+  }
   
   if (is.null(symbol)) {
     usedDefaults = append(usedDefaults, "symbol")
@@ -394,6 +404,7 @@ buildGroupSettings = function(group, color=NULL, fillColor=NULL, symbol=NULL,
   }
   
   df = data.frame(group = group,
+                  altName = altName,
                   color = color,
                   fillColor = fillColor,
                   symbol = symbol,
@@ -482,8 +493,9 @@ legendFromSettings = function(position, settings, ...) {
   vargs = list(...)
   
   settings = settings[ settings$include, ]
-  
-  legend(x=position, y=vargs$y, legend=settings$group, col=settings$color, pt.bg=settings$fillColor, 
+
+  legend(x=position, y=vargs$y, legend=settings$altName, col=settings$color, 
+         pt.bg=settings$fillColor, 
          pch=settings$symbol, pt.cex=settings$cex.symbol, 
          lwd = settings$lwd, lty = settings$lty,
          inset = ifelse(is.null(vargs$inset), 0, vargs$inset),
@@ -497,7 +509,7 @@ legendFromSettings = function(position, settings, ...) {
 
 
 getSettingsDfCOlumnNames = function() {
-  c("group", "lty", "lwd", "symbol", "cex.symbol", "width.errBar", "color", "fillColor", "include")
+  c("group", "altName", "lty", "lwd", "symbol", "cex.symbol", "width.errBar", "color", "fillColor", "include")
 }
 
 replaceMissingSettings = function(settings) {
