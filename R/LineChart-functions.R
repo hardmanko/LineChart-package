@@ -17,7 +17,7 @@ lineChartManual = function() {
 #' 
 #' @param legendPosition The position at which the legend should be placed. If this is not NULL, it is passed through to legend directly.
 #' @param legendTitle The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use NULL.
-#' @params ... Additional parameters, currently passed on to the legend creating functions.
+#' @param ... Additional parameters, currently passed on to the legend creating functions.
 #' 
 #' @return The plotting data frame that was used is returned invisibly.
 #' 
