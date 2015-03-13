@@ -13,4 +13,9 @@ library("devtools")
 devtools::install_github("hardmanko/LineChart-package")
 ```
 
+It is slightly better to install the package from a package file, which you can get by downloading this repository and getting the file from the "packaged" subdirectory. Once you have that file on you computer somewhere, you can install the package using:
+```{r}
+install.packages(type = "source", repos = NULL, pkgs = "path_to_package_file/LineChart_0.1.tar.gz")
+```
+
 To just test the package without installing it, you can simply source `./R/LineChart-functions.R`, which also contains all of the functions and the documentation as comments.

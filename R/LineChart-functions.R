@@ -303,6 +303,7 @@ lineChartDf = function(plotDf,
         if (!is.null(pl$errBar) && !is.na(pl$errBar)) {
           
           if (!is.null(pl$errBarLower) && !is.na(pl$errBarLower)) {
+          	#set the mean because if it is not set, the mean of the CI is used, which is wrong for asymmetrical CIs
             drawErrorBars( x=pl$x, CI=c(pl$y + pl$errBarLower, pl$y + pl$errBar), mean=pl$y, 
                            color=pl$color, lwd=pl$lwd, width=pl$width.errBar)
           } else {
