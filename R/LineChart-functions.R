@@ -145,6 +145,18 @@ createPlottingDf = function(formula, data, settings = NULL, errBarType = "SE") {
   }
   names(plotDf) = c("x", "y", "group")
   
+  if (is.factor(plotDf$x)) {
+  	plotDf$x = levels(plotDf$x)[plotDf$x]
+  }
+  
+  plotDf$xLabels = as.character(plotDf$x)
+  uniqueXLabels = sort(unique(plotDf$xLabels))
+  if (!is.numeric(plotDf$x)) {
+  	plotDf$x = rep(0, nrow(plotDf))
+  	for (i in 1:length(uniqueXLabels)) {
+  		plotDf$x[ plotDf$xLabels == uniqueXLabels[i] ] = i
+  	}
+  }
   
   errorBarFunction = NULL
   if (is.function(errBarType)) {
@@ -280,7 +292,7 @@ lineChartDf = function(plotDf,
                  ylab="", type='n', main=title, axes=FALSE )
     
     if (plotXAxis) {
-      axis(1, lwd=lwd.axes, labels=unique(plotDf$x), at=unique(plotDf$x), 
+    	axis(1, lwd=lwd.axes, labels=unique(plotDf$xLabels), at=unique(plotDf$x), 
            cex.axis=par()$cex.axis)
       mtext(xlab, side=1, line=2, cex=par()$cex.lab * par()$cex)
     }
