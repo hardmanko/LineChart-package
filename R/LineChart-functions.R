@@ -294,7 +294,7 @@ lineChartDf = function(plotDf,
     if (plotXAxis) {
     	axis(1, lwd=lwd.axes, labels=unique(plotDf$xLabels), at=unique(plotDf$x), 
            cex.axis=par()$cex.axis)
-      mtext(xlab, side=1, line=2, cex=par()$cex.lab * par()$cex)
+      mtext(xlab, side=1, line=3, cex=par()$cex.lab * par()$cex)
     }
     
     if (plotYAxis) {
