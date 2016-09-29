@@ -657,26 +657,23 @@ coreLegendFunction = function(position, settings, plot, vargs) {
 
 getBestLegendPositions = function(points, legendFunction, padding = 0) {
 	
-	cornerPositions = c("topleft", "topright", "bottomleft", "bottomright")
+	allPositions = c("center", "left", "right", "top", "bottom", "topleft", "topright", "bottomleft", "bottomright")
+	positionPreference = c(3, rep(2, 4), rep(1, 4))
 	
-	allPositions = c("center", "left", "right", "top", "bottom", cornerPositions)
-	
-	numPointsIn = rep(NA, length(allPositions))
+	res = data.frame(pos=allPositions, positionPreference = positionPreference, 
+									 numPointsIn=NA, isBest = FALSE, stringsAsFactors = FALSE)
 	
 	for (i in 1:length(allPositions)) {
 		pointsIn = testLegendPosition(allPositions[i], points, legendFunction, padding)
-		numPointsIn[i] = sum(pointsIn)
+		res$numPointsIn[i] = sum(pointsIn)
 	}
+
+	res$isBest[ res$numPointsIn == min(res$numPointsIn) ] = TRUE
 	
-	best = which(numPointsIn == min(numPointsIn))
-	bestNames = allPositions[best]
-	if (any(bestNames %in% cornerPositions)) {
-		bestNames = bestNames[bestNames %in% cornerPositions]
-	}
-	
-	res = data.frame(pos=allPositions, numPointsIn=numPointsIn, stringsAsFactors = FALSE)
-	res$isBest = res$pos %in% bestNames
-	
+	#Deselect those with less that best preference of the remaining ones
+	bestPreference = min(res$positionPreference[ res$isBest ])
+	res$isBest[ res$isBest == TRUE & res$positionPreference > bestPreference ] = FALSE
+
 	res
 }
 
