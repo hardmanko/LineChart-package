@@ -4,6 +4,11 @@
 #' This function open the introductory manual/vignettes.
 #' 
 #' @export
+#' @importFrom grDevices rainbow
+#' @importFrom graphics arrows axis box legend lines mtext par plot.default points
+#' @importFrom stats aggregate model.frame t.test terms.formula var
+#' @importFrom utils vignette
+#' 
 lineChartManual = function() {
   vignette("introduction", package="LineChart")
 }

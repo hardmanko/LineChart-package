@@ -3,23 +3,22 @@ Title: Plot Line Charts
 Version: 0.2
 Author: Kyle Hardman <kylehardman@gmail.com>
 Maintainer: Kyle Hardman <kylehardman@gmail.com>
-Description: Plots standard line charts for data for which there is a
-    continuous dependent variable, a continuous independent variable, and
-    optional categorical independent variables. For example, you might want to
-    plot height as a function of age for males and females. The primary
-    plotting function, lineChart, has a formula interface that allows you to
-    provide your data and a formula of the form "y ~ x * g1 * g2 * ... * gK",
-    where "y" is your dependent variable, "x" is a categorical or continuous 
-    independent variable, and "gN" are categorical grouping variables. Your data 
-    will be aggregated based on the formula and the means ploted. The groups will be
-    given default appearances which make them visually discriminable, or the
-    user can supply appearance information, including color, plotting symbol,
-    and line type, among others. Optionally, a legend will be plotted at a
-    specified location, using the appearance information that was used for
-    plotting to create the legend appearance. Standard deviation, standard
-    error, or 95% confidence interval error bars can be calculated automatically. 
-    This package is specialized for making line charts and as a result is quite 
-    easy to use for that purpose.
+Description: Plots standard line charts for data for which there is a continuous
+    dependent variable, a continuous independent variable, and optional categorical
+    independent variables. For example, you might want to plot height as a function
+    of age for males and females. The primary plotting function, lineChart, has
+    a formula interface that allows you to provide your data and a formula of the
+    form "y ~ x * g1 * g2 * ... * gK", where "y" is your dependent variable, "x"
+    is a categorical or continuous independent variable, and "gN" are categorical
+    grouping variables. Your data will be aggregated based on the formula and the
+    means ploted. The groups will be given default appearances which make them
+    visually discriminable, or the user can supply appearance information, including
+    color, plotting symbol, and line type, among others. Optionally, a legend will
+    be plotted at a specified location, using the appearance information that was
+    used for plotting to create the legend appearance. Standard deviation, standard
+    error, or 95% confidence interval error bars can be calculated automatically.
+    This package is specialized for making line charts and as a result is quite easy
+    to use for that purpose.
 Depends:
     R (>= 3.0.0)
 Suggests:
@@ -27,3 +26,4 @@ Suggests:
 VignetteBuilder: R.rsp
 License: MIT + file LICENSE
 LazyData: true
+RoxygenNote: 5.0.1

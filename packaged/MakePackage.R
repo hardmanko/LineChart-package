@@ -5,8 +5,11 @@ install.packages("R.rsp")
 
 setwd("~/R/LineChart-package/")
 
+devtools::document()
+
 devtools::build(path="packaged")
 
+devtools::check()
 
 #Testing
 install.packages("packaged/LineChart_0.2.tar.gz", repos=NULL)
