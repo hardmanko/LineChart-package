@@ -15,7 +15,7 @@ lineChartManual = function() {
 #' @inheritParams createPlottingDf
 #' @inheritParams lineChartDf
 #' 
-#' @param legendPosition The position at which the legend should be placed. If this is not NULL, it is passed through to legend directly.
+#' @param legendPosition The position at which the legend should be placed. If NULL, no legend is plotted. If "CHOOSE_BEST", the best legend position is selected. Otherise, it is passed through to legend() directly.
 #' @param legendTitle The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use NULL.
 #' @param ... Additional parameters, currently passed on to the legend creating functions.
 #' 
@@ -51,7 +51,7 @@ lineChartManual = function() {
 #'   settings=settings, ylim=c(40,300))
 #' lineChart(weight ~ Time * Diet, cw34, legendPosition="bottomright", 
 #'   settings=settings, add=TRUE)
-lineChart = function(formula, data, legendPosition="topright", settings=NULL,
+lineChart = function(formula, data, legendPosition="CHOOSE_BEST", settings=NULL,
                      errBarType = "SE",
                      title="", xlab=NULL, ylab=NULL, legendTitle="GROUP_NAME", 
                      xlim=NULL, ylim=NULL,
@@ -378,7 +378,13 @@ buildGroupSettings = function(group, altName=NULL, color=NULL, fillColor=NULL, s
   
   if (is.null(symbol)) {
     usedDefaults = append(usedDefaults, "symbol")
-    symbol = toupper(as.character(substr(group, 1, 1)))
+    bestSymbols = c(21:25, 0:20)
+    
+    while (length(group) > length(bestSymbols)) {
+    	bestSymbols = c(bestSymbols, bestSymbols)
+    }
+
+    symbol = bestSymbols[1:length(group)]
   }
   
   if (is.null(cex.symbol)) {
@@ -430,7 +436,7 @@ buildGroupSettings = function(group, altName=NULL, color=NULL, fillColor=NULL, s
   )
   
   if (!is.null(usedDefaults) && !suppressWarnings) {
-    warning( paste("Defaults used for:", paste(usedDefaults, collapse=", ")), call.=FALSE)
+    cat( paste("Note: Plotting defaults used for:", paste(usedDefaults, collapse=", "), "\n") )
   }
   
   df
@@ -486,38 +492,8 @@ applySettingsToPlottingDf = function (settings, plotDf) {
   plotDf
 }
 
-#' Create a legend based on a plotting data frame with group appearance settings
-#' 
-#' @param position The position of the legend. This is passed to the `x` argument of legend().
-#' @param plotDf The plotting data frame from which settings will be extracted and used to create the legend.
-#' @param ... A few variable arguments are passed through to legend(): y, cex, inset, title, box.lwd, and horiz.
-#' @export
-legendFromPlottingDf = function(position, plotDf, ...) {
-  legendFromSettings(position, settings=extractGroupSettings(plotDf), ...=...)
-}
 
-#' Create a legend based on group appearance settings
-#' 
-#' @param position The position of the legend. This is passed to the `x` argument of legend().
-#' @param settings The settings data frame that will be used to create the legend.
-#' @param ... A few variable arguments are passed through to legend(): y, cex, inset, title, box.lwd, and horiz.
-#' @export
-legendFromSettings = function(position, settings, ...) {
-  vargs = list(...)
-  
-  settings = settings[ settings$include, ]
 
-  legend(x=position, y=vargs$y, legend=settings$altName, col=settings$color, 
-         pt.bg=settings$fillColor, 
-         pch=settings$symbol, pt.cex=settings$cex.symbol, 
-         lwd = settings$lwd, lty = settings$lty,
-         inset = ifelse(is.null(vargs$inset), 0, vargs$inset),
-         cex = ifelse(is.null(vargs$cex), 1, vargs$cex),
-         box.lwd = ifelse(is.null(vargs$box.lwd), par()$lwd, vargs$box.lwd), 
-         title = vargs$title, 
-         horiz = ifelse(is.null(vargs$horiz), FALSE, vargs$horiz)  
-  )
-}
 
 
 
@@ -599,3 +575,154 @@ drawConnectedPointsDf = function(plotDf) {
     }
   }
 }
+
+
+
+
+#' Create a legend based on a plotting data frame with group appearance settings
+#' 
+#' @param position The position of the legend. If "CHOOSE_BEST", the best legend position is selected. Otherwise, this is passed to the `x` argument of legend().
+#' @param plotDf The plotting data frame from which settings will be extracted and used to create the legend.
+#' @param ... A few variable arguments are passed through to legend(): y, cex, inset, title, box.lwd, and horiz.
+#' @export
+legendFromPlottingDf = function(position, plotDf, ...) {
+	
+	vargs = list(...)
+	
+	settings = extractGroupSettings(plotDf)
+	
+	if (position == "CHOOSE_BEST") {
+		positionLegendFunction = function(pos) {
+			coreLegendFunction(position = pos, settings = settings, plot=FALSE, vargs=vargs)
+		}
+		
+		points = cbind(plotDf$x, plotDf$y)
+		
+		points = rbind(points, cbind(plotDf$x, plotDf$y + plotDf$errBarLower))
+		points = rbind(points, cbind(plotDf$x, plotDf$y + plotDf$errBar))
+		
+		yrange = range(points[,2])
+		yDist = yrange[2] - yrange[1]
+		
+		bestPos = NULL
+		for (padding in seq(yDist / 10, 0, length.out=4)) {
+			bestPos = getBestLegendPositions(points, positionLegendFunction, padding)
+			if (min(bestPos$numPointsIn) == 0) {
+				break
+			}
+		}
+		
+		position = bestPos[ bestPos$isBest, "pos" ][1]
+	}
+	
+	coreLegendFunction(position = position, settings = settings, plot=TRUE, vargs=vargs)
+}
+
+#' Create a legend based on group appearance settings
+#' 
+#' @param position The position of the legend. This is passed to the `x` argument of legend().
+#' @param settings The settings data frame that will be used to create the legend.
+#' @param ... A few variable arguments are passed through to legend(): y, cex, inset, title, box.lwd, and horiz.
+#' @export
+legendFromSettings = function(position, settings, ...) {
+	vargs = list(...)
+	
+	coreLegendFunction(position = position, settings = settings, plot=TRUE, vargs=vargs)
+	
+}
+
+
+coreLegendFunction = function(position, settings, plot, vargs) {
+	
+	settings = settings[ settings$include, ]
+	
+	legend(x=position, y=vargs$y, legend=settings$altName, col=settings$color, 
+				 pt.bg=settings$fillColor, 
+				 pch=settings$symbol, pt.cex=settings$cex.symbol, 
+				 lwd = settings$lwd, lty = settings$lty,
+				 inset = ifelse(is.null(vargs$inset), 0, vargs$inset),
+				 cex = ifelse(is.null(vargs$cex), 1, vargs$cex),
+				 box.lwd = ifelse(is.null(vargs$box.lwd), par()$lwd, vargs$box.lwd), 
+				 title = vargs$title, plot=plot,
+				 horiz = ifelse(is.null(vargs$horiz), FALSE, vargs$horiz)
+	)
+	
+}
+
+
+getBestLegendPositions = function(points, legendFunction, padding = 0) {
+	
+	cornerPositions = c("topleft", "topright", "bottomleft", "bottomright")
+	
+	allPositions = c("center", "left", "right", "top", "bottom", cornerPositions)
+	
+	numPointsIn = rep(NA, length(allPositions))
+	
+	for (i in 1:length(allPositions)) {
+		pointsIn = testLegendPosition(allPositions[i], points, legendFunction, padding)
+		numPointsIn[i] = sum(pointsIn)
+	}
+	
+	best = which(numPointsIn == min(numPointsIn))
+	bestNames = allPositions[best]
+	if (any(bestNames %in% cornerPositions)) {
+		bestNames = bestNames[bestNames %in% cornerPositions]
+	}
+	
+	res = data.frame(pos=allPositions, numPointsIn=numPointsIn, stringsAsFactors = FALSE)
+	res$isBest = res$pos %in% bestNames
+	
+	res
+}
+
+
+
+testLegendPosition = function(position, points, legendFunction, padding) {
+	
+	rect = legendFunction(position)$rect
+	
+	rect = addPadding(position, rect, padding)
+	
+	rect$right = rect$left + rect$w
+	rect$bottom = rect$top - rect$h
+	
+	pointIn = rep(FALSE, nrow(points))
+	
+	for (i in 1:nrow(points)) {
+		x = points[i,1]
+		y = points[i,2]
+		
+		inLR = x > rect$left && x < rect$right
+		inTB = y > rect$bottom && y < rect$top
+		
+		pointIn[i] = inLR && inTB
+	}
+	
+	pointIn
+}
+
+addPadding = function(position, rect, padding) {
+	
+	rect$w = rect$w + padding
+	rect$h = rect$h + padding
+	
+	if (grepl("left", position, fixed=TRUE)) {
+		#do nothing
+	} else if (grepl("right", position, fixed=TRUE)) {
+		rect$left = rect$left - padding
+	} else {
+		rect$left = rect$left - padding / 2
+	}
+	
+	if (grepl("top", position, fixed=TRUE)) {
+		#do nothing
+	} else if (grepl("bottom", position, fixed=TRUE)) {
+		rect$top = rect$top + padding
+	} else {
+		rect$top = rect$top + padding / 2
+	}
+	
+	rect
+}
+
+
