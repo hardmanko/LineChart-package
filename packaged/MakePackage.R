@@ -3,7 +3,7 @@ library(roxygen2)
 
 install.packages("R.rsp")
 
-setwd("~/R/LineChart-package/")
+setwd("~/../Programming/R/LineChart/")
 
 devtools::document()
 

@@ -8,8 +8,10 @@ Installation
 
 This package can be installed directly from this repository with the following commands in R:
 ```{r}
-#install.packages("devtools") #Uncomment if you don't have devtools installed
-library("devtools")
+#You don't need to do this if you already have devtools installed.
+install.packages("devtools")
+
+#Install the package
 devtools::install_github("hardmanko/LineChart-package")
 ```
 
