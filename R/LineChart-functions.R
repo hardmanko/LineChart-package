@@ -297,7 +297,13 @@ lineChartDf = function(plotDf,
                  ylab="", type='n', main=title, axes=FALSE )
     
     if (plotXAxis) {
-    	axis(1, lwd=lwd.axes, labels=unique(plotDf$xLabels), at=unique(plotDf$x), 
+    	uniqueXs = unique(plotDf$x)
+    	matchingLabels = rep("", length(uniqueXs))
+    	for (i in 1:length(uniqueXs)) {
+    		matchingLabels[i] = plotDf$xLabels[ plotDf$x == uniqueXs[i] ][1]
+    	}
+    	
+    	axis(1, lwd=lwd.axes, labels=matchingLabels, at=uniqueXs, 
            cex.axis=par()$cex.axis)
       mtext(xlab, side=1, line=3, cex=par()$cex.lab * par()$cex)
     }
@@ -573,10 +579,18 @@ drawConnectedPointsDf = function(plotDf) {
     pl = plotDf[plotDf$group == g,]
     
     if (pl$include[1]) {
-      lines(pl$x, pl$y, col=pl$color, lwd=pl$lwd, lty=pl$lty)
-      points(pl$x, pl$y, pch=pl$symbol, 
-             bg=pl$fillColor, col=pl$color,
-             cex=pl$cex.symbol, lwd=pl$lwd)
+    	
+    	points(pl$x, pl$y, pch=pl$symbol, 
+    				 bg=pl$fillColor, col=pl$color,
+    				 cex=pl$cex.symbol, lwd=pl$lwd)
+    	
+    	if (nrow(pl) >= 2) {
+	    	for (i in 1:(nrow(pl) - 1)) {
+	    	
+	      	lines(pl$x[c(i, i+1)], pl$y[c(i, i+1)], col=pl$color[i], lwd=pl$lwd[i], lty=pl$lty[i])
+	    	}
+    	}
+
     }
   }
 }
