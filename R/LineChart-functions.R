@@ -579,17 +579,17 @@ drawConnectedPointsDf = function(plotDf) {
     pl = plotDf[plotDf$group == g,]
     
     if (pl$include[1]) {
-    	
-    	points(pl$x, pl$y, pch=pl$symbol, 
-    				 bg=pl$fillColor, col=pl$color,
-    				 cex=pl$cex.symbol, lwd=pl$lwd)
-    	
+
     	if (nrow(pl) >= 2) {
 	    	for (i in 1:(nrow(pl) - 1)) {
 	    	
 	      	lines(pl$x[c(i, i+1)], pl$y[c(i, i+1)], col=pl$color[i], lwd=pl$lwd[i], lty=pl$lty[i])
 	    	}
     	}
+	
+	points(pl$x, pl$y, pch=pl$symbol, 
+			 bg=pl$fillColor, col=pl$color,
+			 cex=pl$cex.symbol, lwd=pl$lwd)
 
     }
   }
