@@ -17,4 +17,3 @@ A new plotting data frame with settings applied.
 \description{
 Apply appearance settings to a plotting data frame.
 }
-

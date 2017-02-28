@@ -26,22 +26,24 @@ lineChartManual = function() {
 #' 
 #' @return The plotting data frame that was used is returned invisibly.
 #' 
-#' @seealso \code{\link{createPlottingDf}}, \code{\link{lineChartDf}}, \code{\link{buildGroupSettings}}, \code{\link{extractGroupSettings}}, \code{\link{applySettingsToPlottingDf}}, \code{\link{legendFromPlottingDf}}, \code{\link{legendFromSettings}}
+#' @seealso [`createPlottingDf`], [`lineChartDf`], [`buildGroupSettings`], [`extractGroupSettings`], [`applySettingsToPlottingDf`], [`legendFromPlottingDf`], [`legendFromSettings`]
 #' 
+#' @md
 #' @export
 #' 
 #' @examples
 #' #Basic use case: Plotting data frame with default appearance.
 #' data(ChickWeight)
-#' lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft")
+#' lineChart(weight ~ Time * Diet, ChickWeight)
 #' 
 #' #You can modify the appearance of groups by providing group settings:
-#' settings = buildGroupSettings(group=1:4, symbol=21:24, lty=1:4)
-#' lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
+#' settings = buildGroupSettings(group=1:4, symbol=21:24, lty=1:4, 
+#'   fillColor=gray(seq(0, 1, length.out = 4)))
+#' lineChart(weight ~ Time * Diet, ChickWeight, settings=settings)
 #' 
 #' #Let's ignore group 3
 #' settings[ settings$group == 3, "include" ] = FALSE 
-#' lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
+#' lineChart(weight ~ Time * Diet, ChickWeight, settings=settings)
 #' 
 #' #If for whatever reason you have data in two different data frames that you 
 #' #want in the same plot, use add=TRUE to add to the existing plot.
@@ -56,15 +58,16 @@ lineChartManual = function() {
 #'   settings=settings, ylim=c(40,300))
 #' lineChart(weight ~ Time * Diet, cw34, legendPosition="bottomright", 
 #'   settings=settings, add=TRUE)
-lineChart = function(formula, data, legendPosition="CHOOSE_BEST", settings=NULL,
-                     errBarType = "SE",
+#' #The legend doesn't update, but another legend gets added.
+lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
+										 centralTendencyType = "mean", errBarType = "SE",
                      title="", xlab=NULL, ylab=NULL, legendTitle="GROUP_NAME", 
                      xlim=NULL, ylim=NULL,
                      plotXAxis=TRUE, plotYAxis=TRUE,
                      lwd.axes=par()$lwd, add=FALSE,
                      ...) 
 {
-  plotDf = createPlottingDf(formula, data, settings=settings, errBarType=errBarType)
+  plotDf = createPlottingDf(formula, data, settings=settings, centralTendencyType=centralTendencyType, errBarType=errBarType)
   
   lineChartDf(plotDf, title=title, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim,
                 plotXAxis=plotXAxis, plotYAxis=plotYAxis, lwd.axes=lwd.axes, add=add)
@@ -73,9 +76,74 @@ lineChart = function(formula, data, legendPosition="CHOOSE_BEST", settings=NULL,
     if (!is.null(legendTitle) && (legendTitle == "GROUP_NAME")) {
       legendTitle = attr(plotDf, "originalNames", exact=TRUE)$group
     }
-    legendFromPlottingDf(legendPosition, plotDf, title=legendTitle, ...=...)
+  	# Only plot legend if there is more than one group
+  	if (length(unique(plotDf$group)) > 1) {
+    	legendFromPlottingDf(legendPosition, plotDf, title=legendTitle, ...=...)
+  	}
   }
   invisible(plotDf)
+}
+
+
+getErrorBarFunctionFromName = function(errBarType) {
+	if (errBarType == "SE") {
+		
+		errorBarFunction = function(x) { 
+			y = sqrt(var(x)/length(x))
+			list(eb=c(-y, y), includesCenter=FALSE)
+		}
+		
+	}	else if (errBarType == "SD") {
+		errorBarFunction = function(x) { 
+			y = sqrt(var(x))
+			list(eb=c(-y, y), includesCenter=FALSE)
+		}
+	} else if (errBarType == "CI95") {
+		
+		errorBarFunction = function(x) {
+			t = t.test(x, conf.level=.95)
+			list(eb=as.numeric(t$conf.int), includesCenter=TRUE)
+		}
+		
+	} else if (errBarType == "Cred95") {
+		
+		errorBarFunction = function(x) {
+			
+			if (var(x) == 0) {
+				return(list(eb=c(0,0), includesCenter=FALSE))
+			}
+			
+			if (!requireNamespace("BayesFactor", quietly = TRUE)) {
+				stop("The package BayesFactor is needed for credible intervals. Please install it.", call. = FALSE)
+			}
+			
+			tp = BayesFactor::ttestBF(x, iterations=10000, posterior=TRUE, progress=FALSE)
+			mu = tp[,"mu"]
+			
+			qs = as.numeric(stats::quantile(mu, c(0.025, 0.975)))
+			
+			list(eb=qs, includesCenter=TRUE)
+		}
+		
+	} else {
+		stop("Unknown errBarType.")
+	}
+	
+	errorBarFunction
+}
+
+
+getCentralTendencyFunctionFromName = function(centralTendencyType) {
+	
+	if (centralTendencyType == "mean") {
+		centralTendencyFun = mean
+	} else if (centralTendencyType == "median") {
+		centralTendencyFun = stats::median
+	}	else {
+		stop("Unknown centralTendencyType.")
+	}
+	
+	centralTendencyFun
 }
 
 
@@ -89,30 +157,58 @@ lineChart = function(formula, data, legendPosition="CHOOSE_BEST", settings=NULL,
 #' Note that if no grouping variables are supplied by the formula, a `group` column 
 #' will still be made in the resulting data frame and the group name will be the number 0.
 #' 
-#' @param formula The formula should be of the form `y ~ x` or `y ~ x * g1 * g2 * ... * gK`, where the `gN` are any number of grouping variables and 'y', 'x', and 'gi' are the names of columns in `data`. If grouping variables are used, `x` must come before them.
+#' @param formula The formula should be of the form `y ~ x` or `y ~ x * g1 * g2 * ... * gK`, where the `gN` are any number of grouping variables and `y`, `x`, and `gi` are the names of columns in `data`. If grouping variables are used, `x` must come before them.
 #' @param data A data frame containing the data to be used in creation of the plotting data frame.
 #' @param settings Plotting settings for the different groups in the data, such as the symbol to use.
-#' @param errBarType The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created. If a function is supplied, the function should take one argument, which will be the data used to plot a single data point, and return two error bar amounts. These amounts should be the signed difference between the end of the error bar and the mean of the data for that data point.
+#' @param centralTendencyType Character or function. The type of central tendency measure to use. Can be "mean" or "median". If a function, should be a function of one vector argument that returns a scalar.
+#' @param errBarType The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether `eb` is distances or endpoints. If `eb` is distances, then it does not include the center, so `includesCenter` should be `FALSE`. If `eb` is endpoints, then it does include the center, so `includesCenter` should be `TRUE`.
 #' @return A data frame which can be plotted with lineChartDf. See the documentation for lineChartDf for examples.
+#' @md
 #' @export
 #' 
 #' @examples
 #' 
 #' data(ChickWeight)
 #' 
-#' #Example of a user-defined error bar function:
-#' quartiles = function(x) {
-#'  as.numeric(quantile(x - mean(x), c(0.25, 0.75)))
+#' #Example of a user-defined central tendency function:
+#' trimmedMedian = function(x) {
+#'   #trim highest and lowest values
+#'   x = sort(x)[ 2:(length(x) - 1) ]
+#'   median(x)
 #' }
 #' 
-#' plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, errBarType=quartiles)
+#' #Example of a user-defined error bar function:
+#' quartiles = function(x) {
+#'   qs = as.numeric(quantile(x, c(0.25, 0.75)))
+#'   list(eb=qs, includesCenter=TRUE)
+#' }
+#' 
+#' plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, 
+#'   centralTendencyType=trimmedMedian, errBarType=quartiles)
 #' lineChartDf(plotDf)
 #' 
-createPlottingDf = function(formula, data, settings = NULL, errBarType = "SE") {
+createPlottingDf = function(formula, data, settings = NULL, centralTendencyType = "mean", errBarType = "SE") {
   
+	errorBarFunction = NULL
+	if (is.function(errBarType)) {
+		errorBarFunction = errBarType
+	} else {
+		if (!is.null(errBarType)) {
+			errorBarFunction = getErrorBarFunctionFromName(errBarType)
+		}
+	}
+	
+	if (is.function(centralTendencyType)) {
+		centralTendencyFunction = centralTendencyType
+	} else {
+		centralTendencyFunction = getCentralTendencyFunctionFromName(centralTendencyType)
+	}
+	
+	
+	
   mf = model.frame(formula=formula, data=data)
-  
-  plotDf = aggregate(formula, mf, mean)
+
+  plotDf = aggregate(formula, mf, centralTendencyFunction)
   
   
   terms = terms.formula(formula)
@@ -163,35 +259,31 @@ createPlottingDf = function(formula, data, settings = NULL, errBarType = "SE") {
   	}
   }
   
-  errorBarFunction = NULL
-  if (is.function(errBarType)) {
-    errorBarFunction = errBarType
-  } else {
-    if (!is.null(errBarType)) {
-      if (errBarType == "SE") {
-        errorBarFunction = function(x) { y = sqrt(var(x)/length(x)); c(-y, y) }
-      } else if (errBarType == "CI95") {
-        errorBarFunction = function(x) {
-          t = t.test(x, conf.level=.95)
-          y = as.numeric(t$conf.int - t$estimate)
-        }
-      } else if (errBarType == "SD") {
-        errorBarFunction = function(x) { y = sqrt(var(x)); c(-y, y) }
-      }
-    }
-  }
-  
   if (is.null(errorBarFunction)) {
     plotDf$errBar = NA
     plotDf$errBarLower = NA
   } else {
-    #plotDf$errBar = aggregate(formula, mf, errorBarFunction)[,names(mf)[1]]
-    
-    errBars = aggregate(formula, mf, errorBarFunction)[,names(mf)[1]]
+  	
+  	ebfWrapper = function(x) {
+  		temp = errorBarFunction(x)
+  		if (is.list(temp)) {
+  			if (temp$includesCenter) {
+  				temp = temp$eb - centralTendencyFunction(x)
+  			} else {
+  				temp = temp$eb
+  			}
+  		}
+  		temp
+  	}
+
+    errBars = aggregate(formula, mf, ebfWrapper)[,names(mf)[1]]
     errBars[is.na(errBars)] = 0
     
     #If the ordering of the error bars is wrong, swap lower and upper
-    errBars[ errBars[,1] > errBars[,2], c(1,2) ] = errBars[ errBars[,1] > errBars[,2], c(2,1) ]
+    luSwapped = errBars[,1] > errBars[,2]
+    if (any(luSwapped)) {
+    	errBars[ luSwapped, c(1,2) ] = errBars[ luSwapped, c(2,1) ]
+    }
     
     plotDf$errBarLower = errBars[,1]
     plotDf$errBar = errBars[,2]
@@ -378,6 +470,9 @@ buildGroupSettings = function(group, altName=NULL, color=NULL, fillColor=NULL, s
 {
   group = unique(group)
   ng = length(group)
+  if (ng == 1) {
+  	group = 0
+  }
   
   usedDefaults = NULL
   

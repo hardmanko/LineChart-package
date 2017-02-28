@@ -16,4 +16,3 @@ legendFromSettings(position, settings, ...)
 \description{
 Create a legend based on group appearance settings
 }
-

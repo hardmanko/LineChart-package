@@ -12,4 +12,3 @@ drawConnectedPointsDf(plotDf)
 \description{
 Draw points specified by a plotting data frame with connect lines. This function is primarily for internal use within the LineChart package. If you want to add connected points to a plot, it will probably be easier to use lineChart with add = TRUE.
 }
-

@@ -1,6 +1,6 @@
 Package: LineChart
 Title: Plot Line Charts
-Version: 0.2
+Version: 0.3
 Author: Kyle Hardman <kylehardman@gmail.com>
 Maintainer: Kyle Hardman <kylehardman@gmail.com>
 Description: Plots standard line charts for data for which there is a continuous
@@ -22,8 +22,9 @@ Description: Plots standard line charts for data for which there is a continuous
 Depends:
     R (>= 3.0.0)
 Suggests:
-    R.rsp
+    R.rsp,
+    BayesFactor
 VignetteBuilder: R.rsp
 License: MIT + file LICENSE
 LazyData: true
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

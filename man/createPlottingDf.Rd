@@ -4,16 +4,19 @@
 \alias{createPlottingDf}
 \title{Creates a plottable data frame.}
 \usage{
-createPlottingDf(formula, data, settings = NULL, errBarType = "SE")
+createPlottingDf(formula, data, settings = NULL,
+  centralTendencyType = "mean", errBarType = "SE")
 }
 \arguments{
-\item{formula}{The formula should be of the form `y ~ x` or `y ~ x * g1 * g2 * ... * gK`, where the `gN` are any number of grouping variables and 'y', 'x', and 'gi' are the names of columns in `data`. If grouping variables are used, `x` must come before them.}
+\item{formula}{The formula should be of the form \code{y ~ x} or \code{y ~ x * g1 * g2 * ... * gK}, where the \code{gN} are any number of grouping variables and \code{y}, \code{x}, and \code{gi} are the names of columns in \code{data}. If grouping variables are used, \code{x} must come before them.}
 
 \item{data}{A data frame containing the data to be used in creation of the plotting data frame.}
 
 \item{settings}{Plotting settings for the different groups in the data, such as the symbol to use.}
 
-\item{errBarType}{The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created. If a function is supplied, the function should take one argument, which will be the data used to plot a single data point, and return two error bar amounts. These amounts should be the signed difference between the end of the error bar and the mean of the data for that data point.}
+\item{centralTendencyType}{Character or function. The type of central tendency measure to use. Can be "mean" or "median". If a function, should be a function of one vector argument that returns a scalar.}
+
+\item{errBarType}{The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether \code{eb} is distances or endpoints. If \code{eb} is distances, then it does not include the center, so \code{includesCenter} should be \code{FALSE}. If \code{eb} is endpoints, then it does include the center, so \code{includesCenter} should be \code{TRUE}.}
 }
 \value{
 A data frame which can be plotted with lineChartDf. See the documentation for lineChartDf for examples.
@@ -21,24 +24,32 @@ A data frame which can be plotted with lineChartDf. See the documentation for li
 \description{
 This function creates a data frame that can be used for plotting
 from a user-supplied data frame. The user data will be aggregated
-based on the formula. The resulting plotting data frame can be used 
-with `lineChartDf`.
+based on the formula. The resulting plotting data frame can be used
+with \code{lineChartDf}.
 }
 \details{
-Note that if no grouping variables are supplied by the formula, a `group` column 
+Note that if no grouping variables are supplied by the formula, a \code{group} column
 will still be made in the resulting data frame and the group name will be the number 0.
 }
 \examples{
 
 data(ChickWeight)
 
-#Example of a user-defined error bar function:
-quartiles = function(x) {
- as.numeric(quantile(x - mean(x), c(0.25, 0.75)))
+#Example of a user-defined central tendency function:
+trimmedMedian = function(x) {
+  #trim highest and lowest values
+  x = sort(x)[ 2:(length(x) - 1) ]
+  median(x)
 }
 
-plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, errBarType=quartiles)
+#Example of a user-defined error bar function:
+quartiles = function(x) {
+  qs = as.numeric(quantile(x, c(0.25, 0.75)))
+  list(eb=qs, includesCenter=TRUE)
+}
+
+plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, 
+  centralTendencyType=trimmedMedian, errBarType=quartiles)
 lineChartDf(plotDf)
 
 }
-

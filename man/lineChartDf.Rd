@@ -59,4 +59,3 @@ plotDf$errBar = quants[,3][,2] - plotDf$y
 
 lineChartDf(plotDf)
 }
-

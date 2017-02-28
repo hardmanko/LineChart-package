@@ -9,4 +9,3 @@ lineChartManual()
 \description{
 This function open the introductory manual/vignettes.
 }
-

@@ -4,22 +4,24 @@
 \alias{lineChart}
 \title{Plot data with a line chart}
 \usage{
-lineChart(formula, data, legendPosition = "CHOOSE_BEST", settings = NULL,
-  errBarType = "SE", title = "", xlab = NULL, ylab = NULL,
-  legendTitle = "GROUP_NAME", xlim = NULL, ylim = NULL,
-  plotXAxis = TRUE, plotYAxis = TRUE, lwd.axes = par()$lwd, add = FALSE,
-  ...)
+lineChart(formula, data, settings = NULL, legendPosition = "CHOOSE_BEST",
+  centralTendencyType = "mean", errBarType = "SE", title = "",
+  xlab = NULL, ylab = NULL, legendTitle = "GROUP_NAME", xlim = NULL,
+  ylim = NULL, plotXAxis = TRUE, plotYAxis = TRUE, lwd.axes = par()$lwd,
+  add = FALSE, ...)
 }
 \arguments{
-\item{formula}{The formula should be of the form `y ~ x` or `y ~ x * g1 * g2 * ... * gK`, where the `gN` are any number of grouping variables and 'y', 'x', and 'gi' are the names of columns in `data`. If grouping variables are used, `x` must come before them.}
+\item{formula}{The formula should be of the form \code{y ~ x} or \code{y ~ x * g1 * g2 * ... * gK}, where the \code{gN} are any number of grouping variables and \code{y}, \code{x}, and \code{gi} are the names of columns in \code{data}. If grouping variables are used, \code{x} must come before them.}
 
 \item{data}{A data frame containing the data to be used in creation of the plotting data frame.}
 
-\item{legendPosition}{The position at which the legend should be placed. If NULL, no legend is plotted. If "CHOOSE_BEST", the best legend position is selected. Otherise, it is passed through to legend() directly.}
-
 \item{settings}{Plotting settings for the different groups in the data, such as the symbol to use.}
 
-\item{errBarType}{The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created. If a function is supplied, the function should take one argument, which will be the data used to plot a single data point, and return two error bar amounts. These amounts should be the signed difference between the end of the error bar and the mean of the data for that data point.}
+\item{legendPosition}{The position at which the legend should be placed. If NULL, no legend is plotted. If "CHOOSE_BEST", the best legend position is selected. Otherise, it is passed through to legend() directly.}
+
+\item{centralTendencyType}{Character or function. The type of central tendency measure to use. Can be "mean" or "median". If a function, should be a function of one vector argument that returns a scalar.}
+
+\item{errBarType}{The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether \code{eb} is distances or endpoints. If \code{eb} is distances, then it does not include the center, so \code{includesCenter} should be \code{FALSE}. If \code{eb} is endpoints, then it does include the center, so \code{includesCenter} should be \code{TRUE}.}
 
 \item{title}{The title to place at the top of the plot.}
 
@@ -52,15 +54,16 @@ This function is the primary interface to the LineChart package.
 \examples{
 #Basic use case: Plotting data frame with default appearance.
 data(ChickWeight)
-lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft")
+lineChart(weight ~ Time * Diet, ChickWeight)
 
 #You can modify the appearance of groups by providing group settings:
-settings = buildGroupSettings(group=1:4, symbol=21:24, lty=1:4)
-lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
+settings = buildGroupSettings(group=1:4, symbol=21:24, lty=1:4, 
+  fillColor=gray(seq(0, 1, length.out = 4)))
+lineChart(weight ~ Time * Diet, ChickWeight, settings=settings)
 
 #Let's ignore group 3
 settings[ settings$group == 3, "include" ] = FALSE 
-lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
+lineChart(weight ~ Time * Diet, ChickWeight, settings=settings)
 
 #If for whatever reason you have data in two different data frames that you 
 #want in the same plot, use add=TRUE to add to the existing plot.
@@ -75,8 +78,8 @@ lineChart(weight ~ Time * Diet, cw12, legendPosition="topleft",
   settings=settings, ylim=c(40,300))
 lineChart(weight ~ Time * Diet, cw34, legendPosition="bottomright", 
   settings=settings, add=TRUE)
+#The legend doesn't update, but another legend gets added.
 }
 \seealso{
 \code{\link{createPlottingDf}}, \code{\link{lineChartDf}}, \code{\link{buildGroupSettings}}, \code{\link{extractGroupSettings}}, \code{\link{applySettingsToPlottingDf}}, \code{\link{legendFromPlottingDf}}, \code{\link{legendFromSettings}}
 }
-

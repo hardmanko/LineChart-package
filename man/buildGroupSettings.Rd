@@ -47,4 +47,3 @@ data(ChickWeight)
 settings = buildGroupSettings(group=1:4, symbol=21:24, color=c("red", "green", "orange", "blue"))
 lineChart( weight ~ Time * Diet, ChickWeight, legendPosition="topleft" )
 }
-

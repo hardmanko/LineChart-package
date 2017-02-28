@@ -27,4 +27,3 @@ settings$symbol = 21:24 #Make a small adjustment to the settings
 #Re-plot the data with new settings
 lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
 }
-

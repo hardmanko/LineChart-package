@@ -16,4 +16,3 @@ legendFromPlottingDf(position, plotDf, ...)
 \description{
 Create a legend based on a plotting data frame with group appearance settings
 }
-
