@@ -20,9 +20,9 @@ Description: Plots standard line charts for data for which there is a continuous
     This package is specialized for making line charts and as a result is quite easy
     to use for that purpose.
 Depends:
-    R (>= 3.0.0),
-    R.rsp (>= 0.40.0)
+    R (>= 3.0.0)
 Suggests:
+    R.rsp (>= 0.40.0),
     BayesFactor
 VignetteBuilder: R.rsp
 License: MIT + file LICENSE
