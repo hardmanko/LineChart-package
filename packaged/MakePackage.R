@@ -9,9 +9,10 @@ setwd("~/../Programming/R/LineChart/")
 
 devtools::use_package("BayesFactor", type="Suggests")
 
+file.remove("NAMESPACE")
 devtools::document()
 
-devtools::install()
+devtools::install(build_vignettes = TRUE)
 
 
 
@@ -23,9 +24,18 @@ install.packages("packaged/LineChart_0.3.tar.gz", repos=NULL)
 
 
 
+
+remove.packages("LineChart")
+devtools::install_github("hardmanko/LineChart-package", build_vignettes = TRUE)
+
+
+
+
 library(LineChart)
 
 ?lineChart
+
+vignette("introduction", "LineChart")
 
 settings = buildGroupSettings(0, symbol=16, col="blue")
 data = ChickWeight
