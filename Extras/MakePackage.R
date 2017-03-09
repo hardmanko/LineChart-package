@@ -5,14 +5,29 @@ install.packages("R.rsp")
 
 
 
+pkgVer = "0.3.0"
+
 setwd("~/../Programming/R/LineChart/")
 
 devtools::use_package("BayesFactor", type="Suggests")
 
+
+desc = read.dcf("DESCRIPTION")
+desc[,"Version"] = pkgVer
+desc[,"Date"] = format(Sys.Date(), "%Y")
+write.dcf(desc, "DESCRIPTION")
+
+lic = read.dcf("LICENSE")
+lic[,"YEAR"] = format(Sys.Date(), "%Y")
+write.dcf(lic, "LICENSE")
+
 file.remove("NAMESPACE")
 devtools::document()
 
+
 devtools::install(build_vignettes = TRUE)
+
+
 
 
 
