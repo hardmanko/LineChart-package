@@ -1,11 +1,11 @@
 LineChart-package
 =================
 
-This is a simple package that plots line charts in R. The introductory vignettes are in the `/vignettes` directory of this repository in pdf form. It's just a few pages and describes most of the whole package. Or, once the package is installed, you can run
+This is a simple package that plots line charts in R. The introductory manual is in the `/vignettes` directory of this repository in pdf form. It's just a few pages and describes most of the whole package. Or, once the package is installed, you can run
 ```{r}
 vignette("introduction", "LineChart")
 ```
-to open the vignette.
+to open the introductory manual.
 
 Installation
 ------------
@@ -19,7 +19,3 @@ install.packages(c("devtools", "R.rsp"))
 devtools::install_github("hardmanko/LineChart-package", build_vignettes = TRUE)
 ```
 
-You can alternately install the package from one of the source packages in the `packages` subdirectory. Once you have a package file on you computer somewhere, you can install the package using:
-```{r}
-install.packages(type = "source", repos = NULL, pkgs = "path_to_package_file/LineChart_0.3.tar.gz")
-```
