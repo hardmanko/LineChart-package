@@ -1,7 +1,7 @@
 
 #' Open the introductory manual for the LineChart package.
 #' 
-#' This function open the introductory manual/vignettes.
+#' This function opens the introductory manual/vignettes.
 #' 
 #' @export
 #' @importFrom grDevices rainbow
@@ -64,10 +64,10 @@ lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
                      title="", xlab=NULL, ylab=NULL, legendTitle="GROUP_NAME", 
                      xlim=NULL, ylim=NULL,
                      plotXAxis=TRUE, plotYAxis=TRUE,
-                     lwd.axes=par()$lwd, add=FALSE,
+                     lwd.axes=par()$lwd, add=FALSE, xOrder = NULL,
                      ...) 
 {
-  plotDf = createPlottingDf(formula, data, settings=settings, centralTendencyType=centralTendencyType, errBarType=errBarType)
+  plotDf = createPlottingDf(formula, data, settings=settings, centralTendencyType=centralTendencyType, errBarType=errBarType, xOrder = xOrder)
   
   lineChartDf(plotDf, title=title, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim,
                 plotXAxis=plotXAxis, plotYAxis=plotYAxis, lwd.axes=lwd.axes, add=add)
@@ -162,6 +162,8 @@ getCentralTendencyFunctionFromName = function(centralTendencyType) {
 #' @param settings Plotting settings for the different groups in the data, such as the symbol to use.
 #' @param centralTendencyType Character or function. The type of central tendency measure to use. Can be "mean" or "median". If a function, should be a function of one vector argument that returns a scalar.
 #' @param errBarType The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether `eb` is distances or endpoints. If `eb` is distances, then it does not include the center, so `includesCenter` should be `FALSE`. If `eb` is endpoints, then it does include the center, so `includesCenter` should be `TRUE`.
+#' @param xOrder The order in which to plot the x variable. A character vector containing all of the levels of the x variable in the order in which they should be plotted. If the `x` variable is numeric or can be coerced to numeric, this argument does nothing.
+#' 
 #' @return A data frame which can be plotted with lineChartDf. See the documentation for lineChartDf for examples.
 #' @md
 #' @export
@@ -187,7 +189,7 @@ getCentralTendencyFunctionFromName = function(centralTendencyType) {
 #'   centralTendencyType=trimmedMedian, errBarType=quartiles)
 #' lineChartDf(plotDf)
 #' 
-createPlottingDf = function(formula, data, settings = NULL, centralTendencyType = "mean", errBarType = "SE") {
+createPlottingDf = function(formula, data, settings = NULL, centralTendencyType = "mean", errBarType = "SE", xOrder = NULL) {
   
 	errorBarFunction = NULL
 	if (is.function(errBarType)) {
@@ -205,22 +207,17 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
 	}
 	
 	
-	
   mf = model.frame(formula=formula, data=data)
-
   plotDf = aggregate(formula, mf, centralTendencyFunction)
-  
-  
+
   terms = terms.formula(formula)
+  groups = attr(terms, "term.labels")[ attr(terms, "order") == 1 ]
   
-  groups = as.character(attr(terms, "variables"))
-  
-  groupCount = length(groups) - 3
-  
+  groupCount = length(groups) - 1
   hasGroups = groupCount > 0
   
   if (hasGroups) {
-    groups = groups[ 4:length(groups) ]
+    groups = groups[ 2:length(groups) ]
     
     levels = NULL
     if (groupCount > 1) {
@@ -237,31 +234,21 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
     plotDf[ , "indicator_group" ] = 0
   }
   
-  attr(plotDf, "originalNames") = list(y = names(plotDf)[2],
-                                       x = names(plotDf)[1],
-                                       group = names(plotDf)[3]
-  )
+
+  variableNames = list(y = names(plotDf)[2],
+  										 x = names(plotDf)[1],
+  										 group = names(plotDf)[3])
+  attr(plotDf, "originalNames") = variableNames
   if (!hasGroups) {
     attr(plotDf, "originalNames")$group = NULL
   }
   names(plotDf) = c("x", "y", "group")
   
-  if (is.factor(plotDf$x)) {
-  	plotDf$x = levels(plotDf$x)[plotDf$x]
-  }
   
-  plotDf$xLabels = as.character(plotDf$x)
-  uniqueXLabels = sort(unique(plotDf$xLabels))
-  if (!is.numeric(plotDf$x)) {
-  	plotDf$x = rep(0, nrow(plotDf))
-  	for (i in 1:length(uniqueXLabels)) {
-  		plotDf$x[ plotDf$xLabels == uniqueXLabels[i] ] = i
-  	}
-  }
-  
+  #### Make error bars
   if (is.null(errorBarFunction)) {
-    plotDf$errBar = NA
-    plotDf$errBarLower = NA
+  	plotDf$errBar = NA
+  	plotDf$errBarLower = NA
   } else {
   	
   	ebfWrapper = function(x) {
@@ -275,19 +262,78 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
   		}
   		temp
   	}
-
-    errBars = aggregate(formula, mf, ebfWrapper)[,names(mf)[1]]
-    errBars[is.na(errBars)] = 0
-    
-    #If the ordering of the error bars is wrong, swap lower and upper
-    luSwapped = errBars[,1] > errBars[,2]
-    if (any(luSwapped)) {
-    	errBars[ luSwapped, c(1,2) ] = errBars[ luSwapped, c(2,1) ]
-    }
-    
-    plotDf$errBarLower = errBars[,1]
-    plotDf$errBar = errBars[,2]
+  	
+  	errBars = aggregate(formula, mf, ebfWrapper)[,names(mf)[1]]
+  	errBars[is.na(errBars)] = 0
+  	
+  	#If the ordering of the error bars is wrong, swap lower and upper
+  	luSwapped = errBars[,1] > errBars[,2]
+  	if (any(luSwapped)) {
+  		warning("Some of the error bars appear to be in the wrong order (lower > upper). They have been swapped.")
+  		errBars[ luSwapped, c(1,2) ] = errBars[ luSwapped, c(2,1) ]
+  	}
+  	
+  	plotDf$errBarLower = errBars[,1]
+  	plotDf$errBar = errBars[,2]
   }
+  
+  
+  
+  plotDf$xLabels = as.character(plotDf$x)
+  
+  if (is.factor(plotDf$x)) {
+  	plotDf$x = levels(plotDf$x)[plotDf$x]
+  }
+  
+  convertToNumeric = function(x) {
+  	if (is.factor(x)) {
+  		x = levels(x)[x]
+  	}
+  	suppressWarnings( as.numeric(x) )
+  }
+  
+  canBeNumeric = function(x) {
+		nx = convertToNumeric(x)
+  	all(is.na(nx) == FALSE)
+  }
+  
+  xCanBeNumeric = canBeNumeric(plotDf$x)
+  
+  #reorder X based on xOrder
+  xOrderProblem = !all(xOrder %in% plotDf$x) || !all(plotDf$x %in% xOrder)
+  if (is.null(xOrder) || xOrderProblem) {
+  	if (xOrderProblem && !is.null(xOrder)) {
+  		warning("xOrder contains values not found in the x-variable, or vice versa. It has been ignored.")
+  	}
+  	#Use the order of the variable in the data
+  	xOrder = unique(data[ , variableNames$x ])
+  	if (xCanBeNumeric) {
+  		xOrder = sort(convertToNumeric(xOrder))
+  	}
+  }
+  tempDf = NULL
+  for (i in 1:length(xOrder)) {
+  	rows = xOrder[i] == plotDf$xLabels
+  	tempDf = rbind(tempDf, plotDf[ rows, ])
+  }
+  plotDf = tempDf
+
+  #Provide x values for non-numeric x
+  if (xCanBeNumeric) {
+  	plotDf$x = convertToNumeric(plotDf$x)
+  } else {
+  	uniqueXLabels = unique(plotDf$xLabels)
+  	plotDf$x = rep(0, nrow(plotDf))
+  	for (i in 1:length(uniqueXLabels)) {
+  		plotDf$x[ plotDf$xLabels == uniqueXLabels[i] ] = i
+  	}
+  }
+
+  #reorder so that the xs are in order
+  #plotDf = plotDf[ order(plotDf$x), ]
+  
+  
+ 
   
   if (is.null(settings)) {
     settings = buildGroupSettings(plotDf$group, suppressWarnings=TRUE)
@@ -329,17 +375,8 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
 #' plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, errBarType="SD")
 #' 
 #' #Make single-sided error bars, using the standard deviation on just one side
-#' plotDf[plotDf$group == 1, ]$errBar = 0
+#' plotDf[plotDf$group == 1, ]$errBar = 0 # Upper error bar, if errBarLower is also provided
 #' plotDf[plotDf$group == 3, ]$errBarLower = 0
-#' 
-#' lineChartDf(plotDf)
-#' 
-#' #Make assymetrical error bars based on quantiles in the data.
-#' quants = aggregate(weight ~ Time * Diet, ChickWeight, function(x) { quantile(x, c(.25, .75)) })
-#' 
-#' #The values for errBar and errBarLower must be relative to the y value of the plotting data frame.
-#' plotDf$errBarLower = quants[,3][,1] - plotDf$y
-#' plotDf$errBar = quants[,3][,2] - plotDf$y
 #' 
 #' lineChartDf(plotDf)
 lineChartDf = function(plotDf,

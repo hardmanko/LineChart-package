@@ -7,5 +7,5 @@
 lineChartManual()
 }
 \description{
-This function open the introductory manual/vignettes.
+This function opens the introductory manual/vignettes.
 }

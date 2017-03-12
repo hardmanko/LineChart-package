@@ -5,7 +5,7 @@ install.packages("R.rsp")
 
 
 
-pkgVer = "0.3.0"
+pkgVer = "0.3.1"
 
 setwd("~/../Programming/R/LineChart/")
 
@@ -33,10 +33,6 @@ devtools::install(build_vignettes = TRUE)
 
 devtools::check()
 
-devtools::build(path="packaged")
-
-install.packages("packaged/LineChart_0.3.tar.gz", repos=NULL)
-
 
 
 
@@ -52,16 +48,24 @@ library(LineChart)
 
 vignette("introduction", "LineChart")
 
+
 settings = buildGroupSettings(0, symbol=16, col="blue")
-data = ChickWeight
+
+dd = ChickWeight
+
+dd$Diet = LETTERS[dd$Diet]
+
+dd = dd[ sample(1:nrow(dd), nrow(dd), replace=FALSE), ]
+unique(dd$Diet)
 
 
 
-data$Diet = LETTERS[data$Diet]
-lineChart(weight ~ Diet, data, settings=settings)
+lineChart(weight ~ Diet, dd)
 
 
-plotDf = createPlottingDf(weight ~ Time * Diet, data)
+plotDf = createPlottingDf(weight ~ Diet, dd)
+
+
 lineChartDf(plotDf)
 
 lineChart(weight ~ Time * Diet, data)

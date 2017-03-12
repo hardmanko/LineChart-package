@@ -6,9 +6,19 @@ output:
     fig_width: 5
 ---
 
+```{r cache=FALSE, include=FALSE}
+library(knitr)
+knit_hooks$set(small.mar = function(before, options, envir) {
+    if (before) { 
+    	par(mar = c(4.5, 4, 1, 1)) 
+    }
+})
+
+```
+
 The LineChart package can be used for simple line graphs that have a continuous dependent variable, a continuous independent variable, and a categorical independent variable. Line graphs are very common in a lot of areas, such as poultry farming, so we will use the ChickWeight data set in our examples. The ChickWeight data set has weight measurements at 12 time points for each of 50 chicks which were assigned to 1 of 4 diet conditions. We want to plot weight as a function of time and diet, collapsing across chicks (we don't care about individual differences).
 
-```{r}
+```{r small.mar=TRUE, fig.width=6, fig.height=4}
 library(LineChart)
 
 data(ChickWeight)
@@ -23,8 +33,10 @@ There are a variety of things we can do to customize how the line graph is plott
 ```{r}
 lineChart(weight ~ Time * Diet, ChickWeight, errBarType="CI95", 
 	title="Chick weight as a function of time and diet", 
-	xlab="Day", ylab="Chick weight")
+	xlab="Day", ylab="Chick Weight")
 ```
+
+# Plot Appearance Settings
 
 For more control over the appearance of the different groups, you can modify the appearance settings. The diet conditions are numbered 1 through 4, so our groups to apply settings to are the numbers 1 through 4. Instead of using the diet numbers for symbols, we'll use the fillable plotting characters. We'll make all of the lines black, but fill the symbols with a rainbow of color.
 
@@ -42,16 +54,34 @@ settings
 
 The `include` column specifies whether that group should be included in plots. The other settings control the appearance in straightforward ways. `color` sets the color for lines and symbols. If the symbol is fillable, `fillColor` sets the fill color. `symbol` and `cex.symbol` control the plotting character and the size of plotting characters, respectively. `lwd` and `lty` set the line width and type in the standard R fashion. `width.errBar` controls the width of the whiskers at the ends of the error bars. We can use these settings when calling `lineChart` by passing them to the `settings` argument.
 
-```{r}
+```{r small.mar=TRUE, fig.width=6, fig.height=4}
 lineChart(weight ~ Time * Diet, ChickWeight, settings=settings, legendPosition="topleft")
 ```
 
-# Overplotting additional data
+# Non-Numeric X-Variables
 
+You are free to use non-numeric x-variables, as shown in the following example where `Diet` is converted to letters.
+
+```{r small.mar=TRUE, fig.width=4.5, fig.height=3}
+dat = ChickWeight
+
+dat$Diet = LETTERS[dat$Diet] # Make Diet a string
+
+lineChart(weight ~ Diet, dat, xOrder = c("D", "B", "C", "A"))
+
+# Add a point to the plot
+points(2, 110)
+```
+
+When working with non-numeric x-variables, you may want to specify their order, which you can do with the `xOrder` argument. It takes a vector of the values of the x-variable in an order which is used to determine the order along the x-axis that the variables are plotted.
+
+Note that a point was added a (2, 110). When using non-numeric x-variables, the x-location of the values starts at 1 and increases by 1 for each value.
+
+# Overplotting additional data
 
 You might be interested in seeing the grand mean overplotted on the data. This can be done by calling `lineChart` repeatedly, but with the `add` argument set to `TRUE`, so that the subsequent plot adds to the existing plot rather than starting a new plot. Because the plot for the mean does not use a group, just the x variable, there is no obvious name for the mean group, so it is given the value `0` by the LineChart package. Thus, when settings are made for the mean group, the group name should be `0`. Finally, because the two plots use different groups, neither would make a legend including all plotted groups. The solution is to suppress legend plotting for the first two calls, then manually create a legend with `legendFromSettings`, `rbind`-ing together the settings data frames.
 
-```{r}
+```{r small.mar=TRUE, fig.width=6, fig.height=4}
 #The first plot, that we are so used to
 lineChart(weight ~ Time * Diet, ChickWeight, settings=settings, legendPosition=NULL)
 
@@ -84,7 +114,7 @@ One thing we can do is maually specify different types of error bars than the st
 
 For this example, we will just use a subset of the data, diets 1 and 3. We'll make single-sided standard deviation error bars by zeroing out one side of the error bars for two different groups.
 
-```{r}
+```{r small.mar=TRUE, fig.width=6, fig.height=4}
 cw13 = ChickWeight[ ChickWeight$Diet %in% c(1, 3), ]
 
 plotDf = createPlottingDf(weight ~ Time * Diet, cw13, errBarType="SD")
@@ -93,30 +123,17 @@ plotDf[plotDf$group == 1, ]$errBar = 0
 plotDf[plotDf$group == 3, ]$errBarLower = 0
 
 lineChartDf(plotDf)
-```
-
-In the next example, we'll make asymmetrical error bars based based on quantiles. The values for `errBar` and `errBarLower` must be relative to the `y` value of the plotting data frame, so we will subtract `y` from both of them.
-
-```{r}
-quants = aggregate(weight ~ Time * Diet, cw13, function(x) { quantile(x, c(.25, .75)) })
-
-plotDf$errBarLower = quants[,3][,1] - plotDf$y
-plotDf$errBar = quants[,3][,2] - plotDf$y
-
-lineChartDf(plotDf)
 legendFromPlottingDf("left", plotDf)
 ```
 
-As you may have noticed, plots made by `lineChartDf` do not have a legend, so we added one with `legendFromPlottingDf`. If you do not have the plotting data frame, but just the appearance settings data frame, you can use `legendFromSettings` instead. If you want to get the settings from a plotting data frame, use `extractGroupSettings`.
+Plots made by `lineChartDf` do not have a legend, so we added one with `legendFromPlottingDf`. If you do not have the plotting data frame, but just the appearance settings data frame, you can use `legendFromSettings` instead. If you want to get the settings from a plotting data frame, use `extractGroupSettings`.
 
 # Central Tendency and Error Bar Functions
 
 You can provide custom functions to calculate the measure of central tendency (which is where the points are placed) and the error bars. Instead of plotting the mean and SE, let's imagine that you wanted to plot trimmed mean and standard error.
 
-
-
-
 The first function defined here, `getTrimmedX`, is a helper function that returns values of `x` within `sds` standard deviations from the mean.
+
 ```{r}
 getTrimmedX = function(x, sds = 2) {
 	mx = mean(x)
@@ -129,6 +146,7 @@ getTrimmedX = function(x, sds = 2) {
 ```
 
 The next function, `trimmedMean`, will be passed to `lineChart`, so it has specific requirements. It must take one vector-valued argument and return a scalar.
+
 ```{r}
 trimmedMean = function(x) {
 	xt = getTrimmedX(x, 1.5)
@@ -137,6 +155,7 @@ trimmedMean = function(x) {
 ```
 
 The final function, `trimmedSD`, will also be passed to `lineChart`. It must take one vector-valued argument and return information about the error bars that should be drawn. See the documentation for `createPlottingDf` for an exact description of what it must be. In short, in this example, it is a list with two elements: `eb`, The length of the error bars and `includesCenter`, which is `FALSE` to indicate that `eb` gives lengths rather than endpoints of the error bars.
+
 ```{r}
 trimmedSD = function(x) {
 	xt = getTrimmedX(x, 1.5)
@@ -148,7 +167,7 @@ trimmedSD = function(x) {
 
 I will first plot the data using mean and standard deviation, then overplot the trimmed mean and standard deviation.
 
-```{r}
+```{r small.mar=TRUE, fig.width=4, fig.height=3}
 
 settings = buildGroupSettings(0, lty="blank", suppressWarnings = TRUE)
 
@@ -162,8 +181,6 @@ settings$fillColor = "black"
 lineChart(weight ~ Diet, ChickWeight, settings=settings,
 	centralTendencyType = trimmedMean, errBarType = trimmedSD,
 	add=TRUE)
-
-
 ```
 
 

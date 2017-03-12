@@ -8,7 +8,7 @@ lineChart(formula, data, settings = NULL, legendPosition = "CHOOSE_BEST",
   centralTendencyType = "mean", errBarType = "SE", title = "",
   xlab = NULL, ylab = NULL, legendTitle = "GROUP_NAME", xlim = NULL,
   ylim = NULL, plotXAxis = TRUE, plotYAxis = TRUE, lwd.axes = par()$lwd,
-  add = FALSE, ...)
+  add = FALSE, xOrder = NULL, ...)
 }
 \arguments{
 \item{formula}{The formula should be of the form \code{y ~ x} or \code{y ~ x * g1 * g2 * ... * gK}, where the \code{gN} are any number of grouping variables and \code{y}, \code{x}, and \code{gi} are the names of columns in \code{data}. If grouping variables are used, \code{x} must come before them.}
@@ -42,6 +42,8 @@ lineChart(formula, data, settings = NULL, legendPosition = "CHOOSE_BEST",
 \item{lwd.axes}{The line width of the axes and box around the plotting area.}
 
 \item{add}{If FALSE, a new plot will be started and the data plotted in it. If TRUE, the data will be plotted in the current plotting device, if any.}
+
+\item{xOrder}{The order in which to plot the x variable. A character vector containing all of the levels of the x variable in the order in which they should be plotted. If the \code{x} variable is numeric or can be coerced to numeric, this argument does nothing.}
 
 \item{...}{Additional parameters, currently passed on to the legend creating functions.}
 }

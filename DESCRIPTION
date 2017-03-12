@@ -1,6 +1,7 @@
 Package: LineChart
 Title: Plot Line Charts
-Version: 0.3.0
+Version: 0.3.1
+Date: 2017
 Author: Kyle Hardman <kylehardman@gmail.com>
 Maintainer: Kyle Hardman <kylehardman@gmail.com>
 Description: Plots standard line charts for data for which there is a

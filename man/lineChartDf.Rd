@@ -45,17 +45,8 @@ ChickWeight = ChickWeight[ ChickWeight$Diet \%in\% c(1, 3), ]
 plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, errBarType="SD")
 
 #Make single-sided error bars, using the standard deviation on just one side
-plotDf[plotDf$group == 1, ]$errBar = 0
+plotDf[plotDf$group == 1, ]$errBar = 0 # Upper error bar, if errBarLower is also provided
 plotDf[plotDf$group == 3, ]$errBarLower = 0
-
-lineChartDf(plotDf)
-
-#Make assymetrical error bars based on quantiles in the data.
-quants = aggregate(weight ~ Time * Diet, ChickWeight, function(x) { quantile(x, c(.25, .75)) })
-
-#The values for errBar and errBarLower must be relative to the y value of the plotting data frame.
-plotDf$errBarLower = quants[,3][,1] - plotDf$y
-plotDf$errBar = quants[,3][,2] - plotDf$y
 
 lineChartDf(plotDf)
 }
