@@ -86,23 +86,30 @@ lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
 
 
 getErrorBarFunctionFromName = function(errBarType) {
+	
 	if (errBarType == "SE") {
 		
 		errorBarFunction = function(x) { 
-			y = sqrt(var(x)/length(x))
+			y = sd(x) / sqrt(length(x))
 			list(eb=c(-y, y), includesCenter=FALSE)
 		}
 		
 	}	else if (errBarType == "SD") {
+		
 		errorBarFunction = function(x) { 
-			y = sqrt(var(x))
+			y = sd(x)
 			list(eb=c(-y, y), includesCenter=FALSE)
 		}
+		
 	} else if (errBarType == "CI95") {
 		
 		errorBarFunction = function(x) {
-			t = t.test(x, conf.level=.95)
-			list(eb=as.numeric(t$conf.int), includesCenter=TRUE)
+			
+			stdErr = sd(x) / sqrt(length(x))
+			tq = qt(c(0.025, 0.975), df=length(x) - 1)
+			confInt = mean(x) + stdErr * tq
+
+			list(eb=confInt, includesCenter=TRUE)
 		}
 		
 	} else if (errBarType == "Cred95") {
