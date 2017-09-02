@@ -35,7 +35,7 @@ This is mainly an internal function that is called by lineChart, but it can be c
 directly if more control of plotDf is desired.
 }
 \details{
-If xlab and/or ylab are NULL, the original names of the source of the data are used for plotting, if available. The original names are stored in attributes and sometimes attributes are lost or, in the case of a manually created plotting data frame, not present. The original names are stored in an attribute called "originalNames" which is a list with "y", "x", and "group" components.
+If \code{xlab} and/or \code{ylab} are \code{NULL}, the original names of the source of the data are used for plotting, if available. The original names are stored in attributes and sometimes attributes are lost or, in the case of a manually created plotting data frame, not present. The original names are stored in an attribute called "originalNames" which is a list with "y", "x", and "group" components.
 }
 \examples{
 data(ChickWeight)
@@ -45,8 +45,8 @@ ChickWeight = ChickWeight[ ChickWeight$Diet \%in\% c(1, 3), ]
 plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, errBarType="SD")
 
 #Make single-sided error bars, using the standard deviation on just one side
-plotDf[plotDf$group == 1, ]$errBar = 0 # Upper error bar, if errBarLower is also provided
-plotDf[plotDf$group == 3, ]$errBarLower = 0
+plotDf[plotDf$group == 1, ]$ebUpper = 0 # Upper error bar, if ebLower is also provided
+plotDf[plotDf$group == 3, ]$ebLower = 0
 
 lineChartDf(plotDf)
 }

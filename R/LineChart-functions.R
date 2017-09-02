@@ -1,4 +1,8 @@
 
+is.null.or.na = function(x) {
+	is.null(x) || all(is.na(x))
+}
+
 #' Open the introductory manual for the LineChart package.
 #' 
 #' This function opens the introductory manual/vignettes.
@@ -24,7 +28,7 @@ lineChartManual = function() {
 #' @param legendTitle The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use NULL.
 #' @param ... Additional parameters, currently passed on to the legend creating functions.
 #' 
-#' @return The plotting data frame that was used is returned invisibly.
+#' @return The plotting data frame that was used is returned invisibly. It contains all of the information used to create the plot.
 #' 
 #' @seealso [`createPlottingDf`], [`lineChartDf`], [`buildGroupSettings`], [`extractGroupSettings`], [`applySettingsToPlottingDf`], [`legendFromPlottingDf`], [`legendFromSettings`]
 #' 
@@ -171,7 +175,7 @@ getCentralTendencyFunctionFromName = function(centralTendencyType) {
 #' @param errBarType The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, or "CI95" for a 95\% confidence interval. If NULL, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether `eb` is distances or endpoints. If `eb` is distances, then it does not include the center, so `includesCenter` should be `FALSE`. If `eb` is endpoints, then it does include the center, so `includesCenter` should be `TRUE`.
 #' @param xOrder The order in which to plot the x variable. A character vector containing all of the levels of the x variable in the order in which they should be plotted. If the `x` variable is numeric or can be coerced to numeric, this argument does nothing.
 #' 
-#' @return A data frame which can be plotted with lineChartDf. See the documentation for lineChartDf for examples.
+#' @return A data frame which can be plotted with [`lineChartDf`]. See the documentation for lineChartDf for examples.
 #' @md
 #' @export
 #' 
@@ -320,7 +324,7 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
   }
   tempDf = NULL
   for (i in 1:length(xOrder)) {
-  	rows = xOrder[i] == plotDf$xLabels
+  	rows = xOrder[i] == plotDf$xLabel
   	tempDf = rbind(tempDf, plotDf[ rows, ])
   }
   plotDf = tempDf
@@ -329,19 +333,13 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
   if (xCanBeNumeric) {
   	plotDf$x = convertToNumeric(plotDf$x)
   } else {
-  	uniqueXLabels = unique(plotDf$xLabels)
+  	uniqueXLabels = unique(plotDf$xLabel)
   	plotDf$x = rep(0, nrow(plotDf))
   	for (i in 1:length(uniqueXLabels)) {
-  		plotDf$x[ plotDf$xLabels == uniqueXLabels[i] ] = i
+  		plotDf$x[ plotDf$xLabel == uniqueXLabels[i] ] = i
   	}
   }
 
-  #reorder so that the xs are in order
-  #plotDf = plotDf[ order(plotDf$x), ]
-  
-  
- 
-  
   if (is.null(settings)) {
     settings = buildGroupSettings(plotDf$group, suppressWarnings=TRUE)
   }
@@ -359,10 +357,9 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
 #' 
 #' 
 #' @details
-#' If xlab and/or ylab are NULL, the original names of the source of the data are used for plotting, if available. The original names are stored in attributes and sometimes attributes are lost or, in the case of a manually created plotting data frame, not present. The original names are stored in an attribute called "originalNames" which is a list with "y", "x", and "group" components.
+#' If `xlab` and/or `ylab` are `NULL`, the original names of the source of the data are used for plotting, if available. The original names are stored in attributes and sometimes attributes are lost or, in the case of a manually created plotting data frame, not present. The original names are stored in an attribute called "originalNames" which is a list with "y", "x", and "group" components.
 #' 
 #' @param plotDf The data frame to plotted.
-#'
 #' @param title The title to place at the top of the plot.
 #' @param xlab The label to place on the x-axis. If NULL (default), the name of the source of data for the x-variable will be used, if available.
 #' @param ylab The label to place on the y-axis. If NULL (default), the name of the source of data for the y-variable will be used if available.
@@ -373,6 +370,7 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
 #' @param lwd.axes The line width of the axes and box around the plotting area.
 #' @param add If FALSE, a new plot will be started and the data plotted in it. If TRUE, the data will be plotted in the current plotting device, if any.
 #' 
+#' @md
 #' @export
 #' @examples
 #' data(ChickWeight)
@@ -437,7 +435,7 @@ lineChartDf = function(plotDf,
     	uniqueXs = unique(plotDf$x)
     	matchingLabels = rep("", length(uniqueXs))
     	for (i in 1:length(uniqueXs)) {
-    		matchingLabels[i] = plotDf$xLabels[ plotDf$x == uniqueXs[i] ][1]
+    		matchingLabels[i] = plotDf$xLabel[ plotDf$x == uniqueXs[i] ][1]
     	}
     	
     	axis(1, lwd=lwd.axes, labels=matchingLabels, at=uniqueXs, 
@@ -453,6 +451,7 @@ lineChartDf = function(plotDf,
     box(lwd=lwd.axes)
   }
   
+  # Draw error bars
   for (g in unique(plotDf$group)) {
     groupIndices = (1:length(plotDf$group))[plotDf$group == g]
     for (i in groupIndices) {
@@ -485,7 +484,7 @@ lineChartDf = function(plotDf,
 #' not specified.
 #' 
 #' @param group The indentifiers for the groups.
-#' @param altName An alternative name to use in legends, instead of 'group'. If provided and some values are NA, those values will be replaced with the group name.
+#' @param groupLabel An alternative name to use in legends, instead of 'group'. If provided and some values are NA, those values will be replaced with the group name.
 #' @param color The color to be used for the symbols and lines.
 #' @param fillColor The fill color to be used in case the symbols are of a fillable type (e.g. 21:25).
 #' @param symbol The plotting character to use.
@@ -506,11 +505,15 @@ lineChartDf = function(plotDf,
 #' data(ChickWeight)
 #' settings = buildGroupSettings(group=1:4, symbol=21:24, color=c("red", "green", "orange", "blue"))
 #' lineChart( weight ~ Time * Diet, ChickWeight, legendPosition="topleft" )
-buildGroupSettings = function(group, altName=NULL, color=NULL, fillColor=NULL, symbol=NULL,
+buildGroupSettings = function(group, groupLabel=NULL, color=NULL, fillColor=NULL, symbol=NULL,
                               cex.symbol=NULL, width.errBar=NULL, lty=NULL, lwd=NULL,
                               include=NULL, suppressWarnings=FALSE) 
 {
-  group = unique(group)
+	if (!suppressWarnings && length(unique(group)) < length(group)) {
+		warning("There are duplicate elements in group.")
+	}
+	group = unique(group)
+
   ng = length(group)
   if (ng == 1) {
   	group = 0
@@ -518,16 +521,16 @@ buildGroupSettings = function(group, altName=NULL, color=NULL, fillColor=NULL, s
   
   usedDefaults = NULL
   
-  if (is.null(altName)) {
-    altName = group
+  if (is.null(groupLabel)) {
+    groupLabel = group
   } else {
-    altName[ is.na(altName) ] = group[ is.na(altName) ]
+    groupLabel[ is.na(groupLabel) ] = group[ is.na(groupLabel) ]
   }
   
   if (is.null(symbol)) {
     usedDefaults = append(usedDefaults, "symbol")
     bestSymbols = c(21:25, 0:20)
-    
+
     while (length(group) > length(bestSymbols)) {
     	bestSymbols = c(bestSymbols, bestSymbols)
     }
@@ -574,14 +577,14 @@ buildGroupSettings = function(group, altName=NULL, color=NULL, fillColor=NULL, s
   }
   
   df = data.frame(group = group,
-                  altName = altName,
+                  groupLabel = groupLabel,
                   color = color,
                   fillColor = fillColor,
                   symbol = symbol,
                   cex.symbol = cex.symbol,
-                  width.errBar = width.errBar,
                   lty = lty,
                   lwd = lwd,
+  								width.errBar = width.errBar,
                   include = include,
                   stringsAsFactors=FALSE
   )
@@ -591,6 +594,10 @@ buildGroupSettings = function(group, altName=NULL, color=NULL, fillColor=NULL, s
   }
   
   df
+}
+
+getSettingsDfColumnNames = function() {
+	names(buildGroupSettings(0, suppressWarnings = TRUE))
 }
 
 #' Extract the appearance settings from a plotting data frame
@@ -613,7 +620,7 @@ buildGroupSettings = function(group, altName=NULL, color=NULL, fillColor=NULL, s
 #' lineChart(weight ~ Time * Diet, ChickWeight, legendPosition="topleft", settings=settings)
 extractGroupSettings = function(plotDf) {
   agg = aggregate(plotDf, list(plotDf$group), function(x) {x[1]})
-  settings = subset(agg, select=getSettingsDfCOlumnNames())
+  settings = subset(agg, select=getSettingsDfColumnNames())
   replaceMissingSettings(settings)
 }
 
@@ -636,24 +643,15 @@ applySettingsToPlottingDf = function (settings, plotDf) {
     plotRows = (groupNames == g)
     setRows = (settings$group == g)
     
-    for (col in getSettingsDfCOlumnNames()) {
+    for (col in getSettingsDfColumnNames()) {
       plotDf[ plotRows, col ] = settings[ setRows, col ]
     }
   }
   plotDf
 }
 
-
-
-
-
-
-getSettingsDfCOlumnNames = function() {
-  c("group", "altName", "lty", "lwd", "symbol", "cex.symbol", "width.errBar", "color", "fillColor", "include")
-}
-
 replaceMissingSettings = function(settings) {
-  gsn = getSettingsDfCOlumnNames()
+  gsn = getSettingsDfColumnNames()
   currentNames = names(settings)
   
   missing = gsn[!(gsn %in% currentNames)]
@@ -736,8 +734,6 @@ drawConnectedPointsDf = function(plotDf) {
 }
 
 
-
-
 #' Create a legend based on a plotting data frame with group appearance settings
 #' 
 #' @param position The position of the legend. If "CHOOSE_BEST", the best legend position is selected. Otherwise, this is passed to the `x` argument of legend().
@@ -795,7 +791,7 @@ coreLegendFunction = function(position, settings, plot, vargs) {
 	
 	settings = settings[ settings$include, ]
 	
-	legend(x=position, y=vargs$y, legend=settings$altName, col=settings$color, 
+	legend(x=position, y=vargs$y, legend=settings$groupLabel, col=settings$color, 
 				 pt.bg=settings$fillColor, 
 				 pch=settings$symbol, pt.cex=settings$cex.symbol, 
 				 lwd = settings$lwd, lty = settings$lty,

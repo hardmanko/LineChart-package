@@ -4,14 +4,15 @@
 \alias{buildGroupSettings}
 \title{Create a data frame with appearance settings for plotting}
 \usage{
-buildGroupSettings(group, altName = NULL, color = NULL, fillColor = NULL,
-  symbol = NULL, cex.symbol = NULL, width.errBar = NULL, lty = NULL,
-  lwd = NULL, include = NULL, suppressWarnings = FALSE)
+buildGroupSettings(group, groupLabel = NULL, color = NULL,
+  fillColor = NULL, symbol = NULL, cex.symbol = NULL,
+  width.errBar = NULL, lty = NULL, lwd = NULL, include = NULL,
+  suppressWarnings = FALSE)
 }
 \arguments{
 \item{group}{The indentifiers for the groups.}
 
-\item{altName}{An alternative name to use in legends, instead of 'group'. If provided and some values are NA, those values will be replaced with the group name.}
+\item{groupLabel}{An alternative name to use in legends, instead of 'group'. If provided and some values are NA, those values will be replaced with the group name.}
 
 \item{color}{The color to be used for the symbols and lines.}
 

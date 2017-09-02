@@ -21,7 +21,7 @@ createPlottingDf(formula, data, settings = NULL,
 \item{xOrder}{The order in which to plot the x variable. A character vector containing all of the levels of the x variable in the order in which they should be plotted. If the \code{x} variable is numeric or can be coerced to numeric, this argument does nothing.}
 }
 \value{
-A data frame which can be plotted with lineChartDf. See the documentation for lineChartDf for examples.
+A data frame which can be plotted with \code{\link{lineChartDf}}. See the documentation for lineChartDf for examples.
 }
 \description{
 This function creates a data frame that can be used for plotting

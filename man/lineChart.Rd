@@ -48,7 +48,7 @@ lineChart(formula, data, settings = NULL, legendPosition = "CHOOSE_BEST",
 \item{...}{Additional parameters, currently passed on to the legend creating functions.}
 }
 \value{
-The plotting data frame that was used is returned invisibly.
+The plotting data frame that was used is returned invisibly. It contains all of the information used to create the plot.
 }
 \description{
 This function is the primary interface to the LineChart package.

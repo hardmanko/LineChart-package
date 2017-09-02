@@ -5,7 +5,7 @@ install.packages("R.rsp")
 
 
 
-pkgVer = "0.3.1"
+pkgVer = "0.3.2"
 
 setwd("~/../Programming/R/LineChart/")
 
@@ -65,10 +65,9 @@ lineChart(weight ~ Diet, dd)
 
 plotDf = createPlottingDf(weight ~ Diet, dd)
 
-
 lineChartDf(plotDf)
 
-lineChart(weight ~ Time * Diet, data)
+lineChart(weight ~ Time * Diet, dd)
 
 
 
