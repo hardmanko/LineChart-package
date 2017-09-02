@@ -254,8 +254,8 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
   
   #### Make error bars
   if (is.null(errorBarFunction)) {
-  	plotDf$errBar = NA
-  	plotDf$errBarLower = NA
+  	plotDf$ebUpper = NA
+  	plotDf$ebLower = NA
   } else {
   	
   	ebfWrapper = function(x) {
@@ -276,17 +276,17 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
   	#If the ordering of the error bars is wrong, swap lower and upper
   	luSwapped = errBars[,1] > errBars[,2]
   	if (any(luSwapped)) {
-  		warning("Some of the error bars appear to be in the wrong order (lower > upper). They have been swapped.")
+  		warning("Some of the error bars appear to be in the wrong order (lower end > upper end). They have been swapped.")
   		errBars[ luSwapped, c(1,2) ] = errBars[ luSwapped, c(2,1) ]
   	}
   	
-  	plotDf$errBarLower = errBars[,1]
-  	plotDf$errBar = errBars[,2]
+  	plotDf$ebLower = errBars[,1]
+  	plotDf$ebUpper = errBars[,2]
   }
   
   
   
-  plotDf$xLabels = as.character(plotDf$x)
+  plotDf$xLabel = as.character(plotDf$x)
   
   if (is.factor(plotDf$x)) {
   	plotDf$x = levels(plotDf$x)[plotDf$x]
@@ -382,8 +382,8 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
 #' plotDf = createPlottingDf(weight ~ Time * Diet, ChickWeight, errBarType="SD")
 #' 
 #' #Make single-sided error bars, using the standard deviation on just one side
-#' plotDf[plotDf$group == 1, ]$errBar = 0 # Upper error bar, if errBarLower is also provided
-#' plotDf[plotDf$group == 3, ]$errBarLower = 0
+#' plotDf[plotDf$group == 1, ]$ebUpper = 0 # Upper error bar, if ebLower is also provided
+#' plotDf[plotDf$group == 3, ]$ebLower = 0
 #' 
 #' lineChartDf(plotDf)
 lineChartDf = function(plotDf,
@@ -414,15 +414,16 @@ lineChartDf = function(plotDf,
   if (is.null(xlim)) {
     xlim = range(plotDf$x)
   }
-  if (is.null(ylim) || is.na(ylim)) {
+  
+  if (is.null.or.na(ylim)) {
     
-    if (is.null(plotDf$errBar) || is.na(plotDf$errBar)) {
+    if (is.null.or.na(plotDf$ebUpper)) {
       ylim = c(min(plotDf$y), max(plotDf$y))
     } else {
-      if (is.null(plotDf$errBarLower) || is.na(plotDf$errBarLower)) {
-        ylim = c(min(plotDf$y - plotDf$errBar), max(plotDf$y + plotDf$errBar))
+      if (is.null.or.na(plotDf$ebLower)) {
+        ylim = c(min(plotDf$y - plotDf$ebUpper), max(plotDf$y + plotDf$ebUpper))
       } else {
-        ylim = c(min(plotDf$y + plotDf$errBarLower), max(plotDf$y + plotDf$errBar))
+        ylim = c(min(plotDf$y + plotDf$ebLower), max(plotDf$y + plotDf$ebUpper))
       }
     }
     
@@ -459,22 +460,19 @@ lineChartDf = function(plotDf,
       pl = plotDf[i,]
       
       if (pl$include) {
-        if (!is.null(pl$errBar) && !is.na(pl$errBar)) {
-          
-          if (!is.null(pl$errBarLower) && !is.na(pl$errBarLower)) {
-          	#set the mean because if it is not set, the mean of the CI is used, which is wrong for asymmetrical CIs
-            drawErrorBars( x=pl$x, CI=c(pl$y + pl$errBarLower, pl$y + pl$errBar), mean=pl$y, 
-                           color=pl$color, lwd=pl$lwd, width=pl$width.errBar)
-          } else {
-            drawErrorBars( x=pl$x, ciAmount=pl$errBar, mean=pl$y, 
-                           color=pl$color, lwd=pl$lwd, width=pl$width.errBar)
-          }
+      	if (!is.null.or.na(pl$ebUpper) || !is.null.or.na(pl$ebLower)) {
+      		
+      		CI = c(pl$y + pl$ebLower, pl$y + pl$ebUpper)
+      		
+      		drawErrorBars(x = pl$x, mean = pl$y, CI = CI,
+      									color = pl$color, lwd=pl$lwd, width=pl$width.errBar)
           
         }
       }
     }
   }
   
+  # Draw points after error bars so the point is on top of error bar center.
   drawConnectedPointsDf(plotDf)
 }
 
@@ -684,32 +682,32 @@ extendSettings = function(settings, group) {
 }
 
 
-#This can take a confidence interval (CI; two values around a central mean) or a mean and the amount
-#to go in either direction. Single-sided error bars can be made by providing one side of the CI and the mean. For asymmetrical or single-sided error bars, both CI and mean must be provided.
-drawErrorBars = function(x, CI=c(mean-ciAmount, mean+ciAmount), width=.1*par()$cex, ciAmount=NULL, mean=NULL, color="black", lty=1, lwd=1, vertical=TRUE) {
-  
-  x0 = rep(x, 2)
-  x1 = x0
-  y0 = rep(ifelse(is.null(mean), mean(CI), mean), 2)
-  y1 = CI[!is.null(CI)]
-  
-  if (!vertical) {
-    x0 = y0
-    x1 = y1
-    y0 = x0
-    y1 = x1
-  }
-  
-  dSquared = (x0 - x1)^2 + (y0 - y1)^2
-  
-  for (i in 1:length(x0)) {
-    #Only draw arrows with nonzero length so as to avoid warnings
-    if (dSquared[i] != 0) {
-      arrows(x0=x0[i], x1=x1[i], y0=y0[i], y1=y1[i], angle=90, length=width, 
-             lty=lty, lwd=lwd, col=color, code=2)
-    }
-  }
+# This takes scalar x and mean and two element CI
+drawErrorBars = function(x, mean, CI, width=.1*par()$cex, color="black", lty=1, lwd=1, vertical=TRUE) {
+	
+	x0 = rep(x, 2)
+	x1 = x0
+	y0 = rep(mean, 2)
+	y1 = CI[!is.null(CI)]
+	
+	if (!vertical) {
+		x0 = y0
+		x1 = y1
+		y0 = x0
+		y1 = x1
+	}
+	
+	dSquared = (x0 - x1)^2 + (y0 - y1)^2
+	
+	for (i in 1:length(x0)) {
+		#Only draw arrows with nonzero length so as to avoid warnings
+		if (dSquared[i] != 0) {
+			arrows(x0=x0[i], x1=x1[i], y0=y0[i], y1=y1[i], angle=90, length=width, 
+						 lty=lty, lwd=lwd, col=color, code=2)
+		}
+	}
 }
+
 
 #' Draw points with connect lines.
 #' 
