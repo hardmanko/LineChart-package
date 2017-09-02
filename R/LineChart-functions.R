@@ -550,6 +550,9 @@ buildGroupSettings = function(group, altName=NULL, color=NULL, fillColor=NULL, s
   if (is.null(color)) {
     usedDefaults = append(usedDefaults, "color")
     color = rainbow(ng)
+    if (ng == 1) {
+    	color = "black"
+    }
   }
   
   if (is.null(fillColor)) {
