@@ -1,8 +1,4 @@
 
-is.null.or.na = function(x) {
-	is.null(x) || all(is.na(x))
-}
-
 #' Open the introductory manual for the LineChart package.
 #' 
 #' This function opens the introductory manual/vignettes.
@@ -88,74 +84,6 @@ lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
   invisible(plotDf)
 }
 
-
-getErrorBarFunctionFromName = function(errBarType) {
-	
-	if (errBarType == "SE") {
-		
-		errorBarFunction = function(x) { 
-			y = sd(x) / sqrt(length(x))
-			list(eb=c(-y, y), includesCenter=FALSE)
-		}
-		
-	}	else if (errBarType == "SD") {
-		
-		errorBarFunction = function(x) { 
-			y = sd(x)
-			list(eb=c(-y, y), includesCenter=FALSE)
-		}
-		
-	} else if (errBarType == "CI95") {
-		
-		errorBarFunction = function(x) {
-			
-			stdErr = sd(x) / sqrt(length(x))
-			tq = qt(c(0.025, 0.975), df=length(x) - 1)
-			confInt = mean(x) + stdErr * tq
-
-			list(eb=confInt, includesCenter=TRUE)
-		}
-		
-	} else if (errBarType == "Cred95") {
-		
-		errorBarFunction = function(x) {
-			
-			if (var(x) == 0) {
-				return(list(eb=c(0,0), includesCenter=FALSE))
-			}
-			
-			if (!requireNamespace("BayesFactor", quietly = TRUE)) {
-				stop("The package BayesFactor is needed for credible intervals. Please install it.", call. = FALSE)
-			}
-			
-			tp = BayesFactor::ttestBF(x, iterations=10000, posterior=TRUE, progress=FALSE)
-			mu = tp[,"mu"]
-			
-			qs = as.numeric(stats::quantile(mu, c(0.025, 0.975)))
-			
-			list(eb=qs, includesCenter=TRUE)
-		}
-		
-	} else {
-		stop("Unknown errBarType.")
-	}
-	
-	errorBarFunction
-}
-
-
-getCentralTendencyFunctionFromName = function(centralTendencyType) {
-	
-	if (centralTendencyType == "mean") {
-		centralTendencyFun = mean
-	} else if (centralTendencyType == "median") {
-		centralTendencyFun = stats::median
-	}	else {
-		stop("Unknown centralTendencyType.")
-	}
-	
-	centralTendencyFun
-}
 
 
 #' Creates a plottable data frame.
@@ -409,9 +337,7 @@ lineChartDf = function(plotDf,
     }
   }
   
-  if (is.null(xlim)) {
-    xlim = range(plotDf$x)
-  }
+  xlim = valueIfNull(xlim, range(plotDf$x))
   
   if (is.null.or.na(ylim)) {
     
@@ -783,7 +709,6 @@ legendFromSettings = function(position, settings, ...) {
 	vargs = list(...)
 	
 	coreLegendFunction(position = position, settings = settings, plot=TRUE, vargs=vargs)
-	
 }
 
 
@@ -791,18 +716,25 @@ coreLegendFunction = function(position, settings, plot, vargs) {
 	
 	settings = settings[ settings$include, ]
 	
-	legend(x=position, y=vargs$y, legend=settings$groupLabel, col=settings$color, 
+	legend(x=position, y=vargs$y, 
+				 legend=settings$groupLabel, 
+				 col=settings$color, 
 				 pt.bg=settings$fillColor, 
-				 pch=settings$symbol, pt.cex=settings$cex.symbol, 
-				 lwd = settings$lwd, lty = settings$lty,
-				 inset = ifelse(is.null(vargs$inset), 0, vargs$inset),
-				 cex = ifelse(is.null(vargs$cex), 1, vargs$cex),
-				 box.lwd = ifelse(is.null(vargs$box.lwd), par()$lwd, vargs$box.lwd), 
-				 title = vargs$title, plot=plot,
-				 horiz = ifelse(is.null(vargs$horiz), FALSE, vargs$horiz)
+				 pch=settings$symbol, 
+				 pt.cex=settings$cex.symbol, 
+				 lwd = settings$lwd, 
+				 lty = settings$lty,
+				 inset = valueIfNull(vargs$inset, 0),
+				 cex = valueIfNull(vargs$cex, 1),
+				 box.lwd = valueIfNull(vargs$box.lwd, par()$lwd),
+				 horiz = valueIfNull(vargs$horiz, FALSE),
+				 title = vargs$title, 
+				 plot = plot
 	)
 	
 }
+
+
 
 
 getBestLegendPositions = function(points, legendFunction, padding = 0) {
@@ -826,8 +758,6 @@ getBestLegendPositions = function(points, legendFunction, padding = 0) {
 
 	res
 }
-
-
 
 testLegendPosition = function(position, points, legendFunction, padding) {
 	
@@ -878,3 +808,84 @@ addPadding = function(position, rect, padding) {
 }
 
 
+
+is.null.or.na = function(x) {
+	is.null(x) || all(is.na(x))
+}
+
+valueIfNull = function(x, value) {
+	if (is.null(x)) {
+		x = value
+	}
+	x
+}
+
+
+
+getErrorBarFunctionFromName = function(errBarType) {
+	
+	if (errBarType == "SE") {
+		
+		errorBarFunction = function(x) { 
+			y = sd(x) / sqrt(length(x))
+			list(eb=c(-y, y), includesCenter=FALSE)
+		}
+		
+	}	else if (errBarType == "SD") {
+		
+		errorBarFunction = function(x) { 
+			y = sd(x)
+			list(eb=c(-y, y), includesCenter=FALSE)
+		}
+		
+	} else if (errBarType == "CI95") {
+		
+		errorBarFunction = function(x) {
+			
+			stdErr = sd(x) / sqrt(length(x))
+			tq = qt(c(0.025, 0.975), df=length(x) - 1)
+			confInt = mean(x) + stdErr * tq
+			
+			list(eb=confInt, includesCenter=TRUE)
+		}
+		
+	} else if (errBarType == "Cred95") {
+		
+		errorBarFunction = function(x) {
+			
+			if (var(x) == 0) {
+				return(list(eb=c(0,0), includesCenter=FALSE))
+			}
+			
+			if (!requireNamespace("BayesFactor", quietly = TRUE)) {
+				stop("The package BayesFactor is needed for credible intervals. Please install it.", call. = FALSE)
+			}
+			
+			tp = BayesFactor::ttestBF(x, iterations=10000, posterior=TRUE, progress=FALSE)
+			mu = tp[,"mu"]
+			
+			qs = as.numeric(stats::quantile(mu, c(0.025, 0.975)))
+			
+			list(eb=qs, includesCenter=TRUE)
+		}
+		
+	} else {
+		stop("Unknown errBarType.")
+	}
+	
+	errorBarFunction
+}
+
+
+getCentralTendencyFunctionFromName = function(centralTendencyType) {
+	
+	if (centralTendencyType == "mean") {
+		centralTendencyFun = mean
+	} else if (centralTendencyType == "median") {
+		centralTendencyFun = stats::median
+	}	else {
+		stop("Unknown centralTendencyType.")
+	}
+	
+	centralTendencyFun
+}
