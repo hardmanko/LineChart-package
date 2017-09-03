@@ -515,9 +515,9 @@ buildGroupSettings = function(group, groupLabel=NULL, color=NULL, fillColor=NULL
 	group = unique(group)
 
   ng = length(group)
-  if (ng == 1) {
-  	group = 0
-  }
+  #if (ng == 1) {
+  #	group = 0
+  #}
   
   usedDefaults = NULL
   
