@@ -651,9 +651,9 @@ drawConnectedPointsDf = function(plotDf) {
 	    	}
     	}
 	
-	points(pl$x, pl$y, pch=pl$symbol, 
-			 bg=pl$fillColor, col=pl$color,
-			 cex=pl$cex.symbol, lwd=pl$lwd)
+			points(pl$x, pl$y, pch=pl$symbol, 
+				bg=pl$fillColor, col=pl$color,
+				cex=pl$cex.symbol, lwd=pl$lwd)
 
     }
   }
@@ -827,14 +827,14 @@ getErrorBarFunctionFromName = function(errBarType) {
 	if (errBarType == "SE") {
 		
 		errorBarFunction = function(x) { 
-			y = sd(x) / sqrt(length(x))
+			y = stats::sd(x) / sqrt(length(x))
 			list(eb=c(-y, y), includesCenter=FALSE)
 		}
 		
 	}	else if (errBarType == "SD") {
 		
 		errorBarFunction = function(x) { 
-			y = sd(x)
+			y = stats::sd(x)
 			list(eb=c(-y, y), includesCenter=FALSE)
 		}
 		
@@ -842,8 +842,8 @@ getErrorBarFunctionFromName = function(errBarType) {
 		
 		errorBarFunction = function(x) {
 			
-			stdErr = sd(x) / sqrt(length(x))
-			tq = qt(c(0.025, 0.975), df=length(x) - 1)
+			stdErr = stats::sd(x) / sqrt(length(x))
+			tq = stats::qt(c(0.025, 0.975), df=length(x) - 1)
 			confInt = mean(x) + stdErr * tq
 			
 			list(eb=confInt, includesCenter=TRUE)
