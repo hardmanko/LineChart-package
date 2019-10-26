@@ -1,15 +1,18 @@
-library(devtools)
-library(roxygen2)
-
 install.packages("R.rsp")
 
 
 
-pkgVer = "0.3.1"
+library(devtools)
+library(roxygen2)
 
-setwd("~/../Programming/R/LineChart/")
 
-devtools::use_package("BayesFactor", type="Suggests")
+
+pkgVer = "0.3.2"
+
+setwd("D:/Programming/R/LineChart/")
+
+
+usethis::use_package("BayesFactor", type="Suggests")
 
 
 desc = read.dcf("DESCRIPTION")
@@ -29,8 +32,6 @@ devtools::install(build_vignettes = TRUE)
 
 
 
-
-
 devtools::check()
 
 
@@ -40,6 +41,9 @@ remove.packages("LineChart")
 devtools::install_github("hardmanko/LineChart-package", build_vignettes = TRUE)
 
 devtools::install_github("hardmanko/LineChart-package@v0.3.1", build_vignettes = TRUE)
+
+
+
 
 
 library(LineChart)
@@ -70,7 +74,8 @@ lineChartDf(plotDf)
 lineChart(weight ~ Time * Diet, dd)
 
 
-
+###
+# Custom error bar
 
 quartiles = function(x) {
   qs = as.numeric(quantile(x, c(0.25, 0.75)))
@@ -79,3 +84,18 @@ quartiles = function(x) {
 
 
 lineChart(weight ~ Time * Diet, data, errBarType = quartiles, centralTendencyType = "median")
+
+
+###
+# Replicates
+
+pdf1 = lineChart(weight ~ Diet, dd)
+pdf2 = lineChart(weight ~ Diet, dd, replicate = "Chick", repFun = mean)
+
+add = aggregate(weight ~ Diet * Chick, dd, mean)
+pdf3 = lineChart(weight ~ Diet, add)
+
+
+
+
+

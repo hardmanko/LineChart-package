@@ -4,9 +4,9 @@
 \alias{lineChartDf}
 \title{Plot data using a plotting data frame}
 \usage{
-lineChartDf(plotDf, title = "", xlab = NULL, ylab = NULL, ylim = NULL,
-  xlim = NULL, plotXAxis = TRUE, plotYAxis = TRUE, lwd.axes = par()$lwd,
-  add = FALSE)
+lineChartDf(plotDf, title = "", xlab = NULL, ylab = NULL,
+  ylim = NULL, xlim = NULL, plotXAxis = TRUE, plotYAxis = TRUE,
+  lwd.axes = par()$lwd, add = FALSE)
 }
 \arguments{
 \item{plotDf}{The data frame to plotted.}

@@ -65,9 +65,12 @@ lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
                      xlim=NULL, ylim=NULL,
                      plotXAxis=TRUE, plotYAxis=TRUE,
                      lwd.axes=par()$lwd, add=FALSE, xOrder = NULL,
+										 replicate = NULL, repFun = mean,
                      ...) 
 {
-  plotDf = createPlottingDf(formula, data, settings=settings, centralTendencyType=centralTendencyType, errBarType=errBarType, xOrder = xOrder)
+  plotDf = createPlottingDf(formula, data, settings=settings, 
+                            centralTendencyType=centralTendencyType, errBarType=errBarType, 
+                            xOrder = xOrder, replicate = replicate, repFun = repFun)
   
   lineChartDf(plotDf, title=title, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim,
                 plotXAxis=plotXAxis, plotYAxis=plotYAxis, lwd.axes=lwd.axes, add=add)
@@ -102,6 +105,8 @@ lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
 #' @param centralTendencyType Character or function. The type of central tendency measure to use. Can be "mean" or "median". If a function, should be a function of one vector argument that returns a scalar.
 #' @param errBarType The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, "CI95" for a 95\% confidence interval, or "Cred95" for 95% credible interval. If `NULL`, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether `eb` is distances or endpoints. If `eb` is distances, then it does not include the center, so `includesCenter` should be `FALSE`. If `eb` is endpoints, then it does include the center, so `includesCenter` should be `TRUE`.
 #' @param xOrder The order in which to plot the x variable. A character vector containing all of the levels of the x variable in the order in which they should be plotted. If the `x` variable is numeric or can be coerced to numeric, this argument does nothing.
+#' @param replicate The name of a column in `data` providing indices for replicates (e.g. a participant number). The data will be aggregated for each replicate with `repFun` before being plotted. Do not include the replicate column in `formula`.
+#' @param repFun Used to aggregate values for each replicate.
 #' 
 #' @return A data frame which can be plotted with [`lineChartDf`]. See the documentation for lineChartDf for examples.
 #' @md
@@ -128,7 +133,13 @@ lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
 #'   centralTendencyType=trimmedMedian, errBarType=quartiles)
 #' lineChartDf(plotDf)
 #' 
-createPlottingDf = function(formula, data, settings = NULL, centralTendencyType = "mean", errBarType = "SE", xOrder = NULL) {
+createPlottingDf = function(formula, data, 
+                            settings = NULL, 
+                            centralTendencyType = "mean", 
+                            errBarType = "SE", 
+                            xOrder = NULL,
+                            replicate = NULL, repFun = mean) 
+{
   
 	errorBarFunction = NULL
 	if (is.function(errBarType)) {
@@ -136,6 +147,10 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
 	} else {
 		if (!is.null(errBarType)) {
 			errorBarFunction = getErrorBarFunctionFromName(errBarType)
+		} else {
+		  errorBarFunction = function(x) {
+		    list(eb=c(0, 0), includesCenter=FALSE)
+		  }
 		}
 	}
 	
@@ -145,12 +160,20 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
 		centralTendencyFunction = getCentralTendencyFunctionFromName(centralTendencyType)
 	}
 	
+	if (!is.null(replicate)) {
+	  f2 = update.formula(formula, paste0(". ~ . * ", replicate))
+	  data = aggregate(f2, data, centralTendencyFunction)
+	}
 	
   mf = model.frame(formula=formula, data=data)
   plotDf = aggregate(formula, mf, centralTendencyFunction)
+  
 
   terms = terms.formula(formula)
   groups = attr(terms, "term.labels")[ attr(terms, "order") == 1 ]
+  
+  
+
   
   groupCount = length(groups) - 1
   hasGroups = groupCount > 0
@@ -172,7 +195,7 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
   } else {
     plotDf[ , "indicator_group" ] = 0
   }
-  
+
 
   variableNames = list(y = names(plotDf)[2],
   										 x = names(plotDf)[1],
@@ -183,6 +206,9 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
   }
   names(plotDf) = c("x", "y", "group")
   
+  # Add number of observations
+  yVariable = all.vars(formula)[1]
+  plotDf$NObs = aggregate(formula, mf, length)[ , yVariable ]
   
   #### Make error bars
   if (is.null(errorBarFunction)) {
@@ -215,7 +241,6 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
   	plotDf$ebLower = errBars[,1]
   	plotDf$ebUpper = errBars[,2]
   }
-  
   
   
   plotDf$xLabel = as.character(plotDf$x)
@@ -271,6 +296,23 @@ createPlottingDf = function(formula, data, settings = NULL, centralTendencyType 
   if (is.null(settings)) {
     settings = buildGroupSettings(plotDf$group, suppressWarnings=TRUE)
   }
+  
+  pdfSUG = sort(unique(plotDf$group))
+  setSUG = sort(unique(settings$group))
+  
+  if (!all(setSUG == setSUG)) {
+    
+    pdfGrpStr = paste0("(", paste(pdfSUG, collapse=", "), ")")
+    setGrpStr = paste0("(", paste(setSUG, collapse=", "), ")")
+    
+    msg = paste0("Group settings don't match the groups being plotted. Plotted groups are ",
+                 pdfGrpStr, " while the group names in settings are ", setGrpStr, ". Using defaults.")
+    warning(msg)
+    
+    settings = buildGroupSettings(plotDf$group, suppressWarnings=TRUE)
+  }
+    
+    
   plotDf = applySettingsToPlottingDf(settings, plotDf)
   
   plotDf
@@ -430,7 +472,7 @@ lineChartDf = function(plotDf,
 #' 
 #' data(ChickWeight)
 #' settings = buildGroupSettings(group=1:4, symbol=21:24, color=c("red", "green", "orange", "blue"))
-#' lineChart( weight ~ Time * Diet, ChickWeight, legendPosition="topleft" )
+#' lineChart( weight ~ Time * Diet, ChickWeight, settings = settings, legendPosition="topleft" )
 buildGroupSettings = function(group, groupLabel=NULL, color=NULL, fillColor=NULL, symbol=NULL,
                               cex.symbol=NULL, width.errBar=NULL, lty=NULL, lwd=NULL,
                               include=NULL, suppressWarnings=FALSE) 
