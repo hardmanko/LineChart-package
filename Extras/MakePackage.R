@@ -40,7 +40,7 @@ devtools::check()
 remove.packages("LineChart")
 devtools::install_github("hardmanko/LineChart-package", build_vignettes = TRUE)
 
-devtools::install_github("hardmanko/LineChart-package@v0.3.1", build_vignettes = TRUE)
+devtools::install_github("hardmanko/LineChart-package@v0.3.2", build_vignettes = TRUE)
 
 
 

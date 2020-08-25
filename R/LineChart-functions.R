@@ -103,7 +103,7 @@ lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
 #' @param data A data frame containing the data to be used in creation of the plotting data frame.
 #' @param settings Plotting settings for the different groups in the data, such as the symbol to use.
 #' @param centralTendencyType Character or function. The type of central tendency measure to use. Can be "mean" or "median". If a function, should be a function of one vector argument that returns a scalar.
-#' @param errBarType The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, "CI95" for a 95\% confidence interval, or "Cred95" for 95% credible interval. If `NULL`, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether `eb` is distances or endpoints. If `eb` is distances, then it does not include the center, so `includesCenter` should be `FALSE`. If `eb` is endpoints, then it does include the center, so `includesCenter` should be `TRUE`.
+#' @param errBarType The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, "CI95" for a 95% confidence interval, or "Cred95" for 95% credible interval. If `NULL`, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether `eb` is distances or endpoints. If `eb` is distances, then it does not include the center, so `includesCenter` should be `FALSE`. If `eb` is endpoints, then it does include the center, so `includesCenter` should be `TRUE`.
 #' @param xOrder The order in which to plot the x variable. A character vector containing all of the levels of the x variable in the order in which they should be plotted. If the `x` variable is numeric or can be coerced to numeric, this argument does nothing.
 #' @param replicate The name of a column in `data` providing indices for replicates (e.g. a participant number). The data will be aggregated for each replicate with `repFun` before being plotted. Do not include the replicate column in `formula`.
 #' @param repFun Used to aggregate values for each replicate.
@@ -161,7 +161,7 @@ createPlottingDf = function(formula, data,
 	}
 	
 	if (!is.null(replicate)) {
-	  f2 = update.formula(formula, paste0(". ~ . * ", replicate))
+	  f2 = stats::update.formula(formula, paste0(". ~ . * ", replicate))
 	  data = aggregate(f2, data, centralTendencyFunction)
 	}
 	
@@ -169,7 +169,7 @@ createPlottingDf = function(formula, data,
   plotDf = aggregate(formula, mf, centralTendencyFunction)
   
 
-  terms = terms.formula(formula)
+  terms = stats::terms.formula(formula)
   groups = attr(terms, "term.labels")[ attr(terms, "order") == 1 ]
   
   

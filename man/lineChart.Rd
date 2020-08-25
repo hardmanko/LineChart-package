@@ -4,12 +4,28 @@
 \alias{lineChart}
 \title{Plot data with a line chart}
 \usage{
-lineChart(formula, data, settings = NULL,
-  legendPosition = "CHOOSE_BEST", centralTendencyType = "mean",
-  errBarType = "SE", title = "", xlab = NULL, ylab = NULL,
-  legendTitle = "GROUP_NAME", xlim = NULL, ylim = NULL,
-  plotXAxis = TRUE, plotYAxis = TRUE, lwd.axes = par()$lwd,
-  add = FALSE, xOrder = NULL, replicate = NULL, repFun = mean, ...)
+lineChart(
+  formula,
+  data,
+  settings = NULL,
+  legendPosition = "CHOOSE_BEST",
+  centralTendencyType = "mean",
+  errBarType = "SE",
+  title = "",
+  xlab = NULL,
+  ylab = NULL,
+  legendTitle = "GROUP_NAME",
+  xlim = NULL,
+  ylim = NULL,
+  plotXAxis = TRUE,
+  plotYAxis = TRUE,
+  lwd.axes = par()$lwd,
+  add = FALSE,
+  xOrder = NULL,
+  replicate = NULL,
+  repFun = mean,
+  ...
+)
 }
 \arguments{
 \item{formula}{The formula should be of the form \code{y ~ x} or \code{y ~ x * g1 * g2 * ... * gK}, where the \code{gN} are any number of grouping variables and \code{y}, \code{x}, and \code{gi} are the names of columns in \code{data}. If grouping variables are used, \code{x} must come before them.}
@@ -22,7 +38,7 @@ lineChart(formula, data, settings = NULL,
 
 \item{centralTendencyType}{Character or function. The type of central tendency measure to use. Can be "mean" or "median". If a function, should be a function of one vector argument that returns a scalar.}
 
-\item{errBarType}{The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, "CI95" for a 95\% confidence interval, or "Cred95" for 95% credible interval. If \code{NULL}, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether \code{eb} is distances or endpoints. If \code{eb} is distances, then it does not include the center, so \code{includesCenter} should be \code{FALSE}. If \code{eb} is endpoints, then it does include the center, so \code{includesCenter} should be \code{TRUE}.}
+\item{errBarType}{The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, "CI95" for a 95\% confidence interval, or "Cred95" for 95\% credible interval. If \code{NULL}, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether \code{eb} is distances or endpoints. If \code{eb} is distances, then it does not include the center, so \code{includesCenter} should be \code{FALSE}. If \code{eb} is endpoints, then it does include the center, so \code{includesCenter} should be \code{TRUE}.}
 
 \item{title}{The title to place at the top of the plot.}
 

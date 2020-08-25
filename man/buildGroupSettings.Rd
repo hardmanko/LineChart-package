@@ -4,10 +4,19 @@
 \alias{buildGroupSettings}
 \title{Create a data frame with appearance settings for plotting}
 \usage{
-buildGroupSettings(group, groupLabel = NULL, color = NULL,
-  fillColor = NULL, symbol = NULL, cex.symbol = NULL,
-  width.errBar = NULL, lty = NULL, lwd = NULL, include = NULL,
-  suppressWarnings = FALSE)
+buildGroupSettings(
+  group,
+  groupLabel = NULL,
+  color = NULL,
+  fillColor = NULL,
+  symbol = NULL,
+  cex.symbol = NULL,
+  width.errBar = NULL,
+  lty = NULL,
+  lwd = NULL,
+  include = NULL,
+  suppressWarnings = FALSE
+)
 }
 \arguments{
 \item{group}{The indentifiers for the groups.}
