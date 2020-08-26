@@ -128,6 +128,101 @@ legendFromPlottingDf("left", plotDf)
 
 Plots made by `lineChartDf` do not have a legend, so we added one with `legendFromPlottingDf`. If you do not have the plotting data frame, but just the appearance settings data frame, you can use `legendFromSettings` instead. If you want to get the settings from a plotting data frame, use `extractGroupSettings`.
 
+# Replicates
+
+LineChart can help deal with replicates in the data (e.g. in repeated-measures designs). In the ChickWeight data, the Chicks are replicates within the Diets.
+
+To treat a column in a data frame as a replicate column, pass that column name to the `replicate` argument of `lineChart` (or `createPlottingDf`).
+
+```{r small.mar=TRUE, fig.width=6, fig.height=4}
+lineChart(weight ~ Diet, ChickWeight, replicate = "Chick")
+```
+
+Note that Chick is not included in the formula, only in the `replicate` argument.
+
+## Comparison with no replicates
+
+The effect of using replicates is demonstrated below.
+
+Make two plotting DFs that differ in use of the Chick replicate.
+
+```{r}
+noRepDf = createPlottingDf(weight ~ Diet, ChickWeight)
+
+repDf = createPlottingDf(weight ~ Diet, ChickWeight, replicate = "Chick", repFun=mean)
+```
+
+The `repFun` argument specifies what function will be used to aggregate each replicate's values, in this case the mean.
+
+Then do some work to plot both in 1 plot.
+
+```{r small.mar=TRUE, fig.width=6, fig.height=4}
+# Set plotting group to 1 for replicate df
+repDf$group = 1 
+
+# combine into 1 df
+bothDf = rbind(noRepDf, repDf) 
+
+# Create group settings 
+settings = buildGroupSettings(group=c(0,1),
+                              color=c("black", "red"), 
+                              groupLabel = c("No Replicate", "Replicate"), 
+                              suppressWarnings = TRUE)
+# apply settings to bothDf
+bothDf = applySettingsToPlottingDf(settings, bothDf)
+# and plot
+lineChartDf(bothDf)
+```
+
+The means and error bars differ depending on whether replicates are used. Notice in particular the `y` (central tendency), `NObs` (number of observations), and `ebLower`/`ebUpper` for error bar length.
+
+```{r}
+print(bothDf)
+```
+
+It is typical in psychology research to use participants as replicates with conditions, so the conventionally correct choice would be to use the `replicate` feature when plotting.
+
+## Details on Replicates
+
+With `replicate = "Chick"`, `lineChart` first calculates the central tendency of each replicate within the other factors that are being used. In this case, `Chick` is within `Diet`.
+
+For this example, the function used to aggregate replicates is set with `repFun` to the `mean` function while the central tendency is set to the median.
+
+```{r small.mar=TRUE, fig.width=6, fig.height=4}
+lineChart(weight ~ Diet, ChickWeight, replicate = "Chick", 
+          repFun = mean, 
+          centralTendencyType = median)
+```
+
+For the call, the following two steps are used to calculate the central tendency. Note that the following is pseudocode that is close to actual code.
+
+```{r}
+# From the call:
+repFun = mean
+ctFun = median
+```
+
+1) Aggregate ChickWeight, keeping the Chick replicate. Use repFun.
+
+```{r}
+temp = aggregate(weight ~ Diet * Chick, ChickWeight, repFun) 
+```
+
+2) Aggregate temp, dropping the Chick replicate to get the Diet means. Use ctFun.
+
+```{r}
+aggregate(weight ~ Diet, temp, ctFun)
+```
+
+The error bars are also calculated at step 2(b) using temp with the error bar function (see `errBarType`).
+
+When `replicate` is not supplied or is `NULL`, `lineChart` only does the second aggregate, getting a somewhat different result: 
+
+```{r}
+aggregate(weight ~ Diet, ChickWeight, ctFun)
+```
+
+
 # Central Tendency and Error Bar Functions
 
 You can provide custom functions to calculate the measure of central tendency (which is where the points are placed) and the error bars. Instead of plotting the mean and SE, let's imagine that you wanted to plot trimmed mean and standard error.

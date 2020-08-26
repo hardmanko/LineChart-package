@@ -13,8 +13,11 @@ lineChartDf(
   xlim = NULL,
   plotXAxis = TRUE,
   plotYAxis = TRUE,
+  legendPosition = "CHOOSE_BEST",
+  legendTitle = "GROUP_NAME",
   lwd.axes = par()$lwd,
-  add = FALSE
+  add = FALSE,
+  ...
 )
 }
 \arguments{
@@ -34,9 +37,15 @@ lineChartDf(
 
 \item{plotYAxis}{Should the y-axis be plotted?}
 
+\item{legendPosition}{The position at which the legend should be placed. If NULL, no legend is plotted. If "CHOOSE_BEST", the best legend position is selected. Otherise, it is passed through to legend() directly.}
+
+\item{legendTitle}{The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use \code{NULL}.}
+
 \item{lwd.axes}{The line width of the axes and box around the plotting area.}
 
 \item{add}{If FALSE, a new plot will be started and the data plotted in it. If TRUE, the data will be plotted in the current plotting device, if any.}
+
+\item{...}{Additional parameters, currently passed on to the legend creating functions.}
 }
 \description{
 This function uses a data frame with the same format as one created by createPlottingDf.

@@ -8,17 +8,17 @@ lineChart(
   formula,
   data,
   settings = NULL,
-  legendPosition = "CHOOSE_BEST",
   centralTendencyType = "mean",
   errBarType = "SE",
   title = "",
   xlab = NULL,
   ylab = NULL,
-  legendTitle = "GROUP_NAME",
   xlim = NULL,
   ylim = NULL,
   plotXAxis = TRUE,
   plotYAxis = TRUE,
+  legendPosition = "CHOOSE_BEST",
+  legendTitle = "GROUP_NAME",
   lwd.axes = par()$lwd,
   add = FALSE,
   xOrder = NULL,
@@ -34,8 +34,6 @@ lineChart(
 
 \item{settings}{Plotting settings for the different groups in the data, such as the symbol to use.}
 
-\item{legendPosition}{The position at which the legend should be placed. If NULL, no legend is plotted. If "CHOOSE_BEST", the best legend position is selected. Otherise, it is passed through to legend() directly.}
-
 \item{centralTendencyType}{Character or function. The type of central tendency measure to use. Can be "mean" or "median". If a function, should be a function of one vector argument that returns a scalar.}
 
 \item{errBarType}{The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, "CI95" for a 95\% confidence interval, or "Cred95" for 95\% credible interval. If \code{NULL}, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether \code{eb} is distances or endpoints. If \code{eb} is distances, then it does not include the center, so \code{includesCenter} should be \code{FALSE}. If \code{eb} is endpoints, then it does include the center, so \code{includesCenter} should be \code{TRUE}.}
@@ -46,8 +44,6 @@ lineChart(
 
 \item{ylab}{The label to place on the y-axis. If NULL (default), the name of the source of data for the y-variable will be used if available.}
 
-\item{legendTitle}{The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use NULL.}
-
 \item{xlim}{The plotting range of the x-axis.}
 
 \item{ylim}{The plotting range of the y-axis.}
@@ -55,6 +51,10 @@ lineChart(
 \item{plotXAxis}{Should the x-axis be plotted?}
 
 \item{plotYAxis}{Should the y-axis be plotted?}
+
+\item{legendPosition}{The position at which the legend should be placed. If NULL, no legend is plotted. If "CHOOSE_BEST", the best legend position is selected. Otherise, it is passed through to legend() directly.}
+
+\item{legendTitle}{The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use \code{NULL}.}
 
 \item{lwd.axes}{The line width of the axes and box around the plotting area.}
 
@@ -64,7 +64,7 @@ lineChart(
 
 \item{replicate}{The name of a column in \code{data} providing indices for replicates (e.g. a participant number). The data will be aggregated for each replicate with \code{repFun} before being plotted. Do not include the replicate column in \code{formula}.}
 
-\item{repFun}{Used to aggregate values for each replicate.}
+\item{repFun}{A function that is used to aggregate values for each replicate. Defaults to \code{mean}.}
 
 \item{...}{Additional parameters, currently passed on to the legend creating functions.}
 }

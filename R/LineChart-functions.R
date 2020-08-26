@@ -20,10 +20,6 @@ lineChartManual = function() {
 #' @inheritParams createPlottingDf
 #' @inheritParams lineChartDf
 #' 
-#' @param legendPosition The position at which the legend should be placed. If NULL, no legend is plotted. If "CHOOSE_BEST", the best legend position is selected. Otherise, it is passed through to legend() directly.
-#' @param legendTitle The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use NULL.
-#' @param ... Additional parameters, currently passed on to the legend creating functions.
-#' 
 #' @return The plotting data frame that was used is returned invisibly. It contains all of the information used to create the plot.
 #' 
 #' @seealso [`createPlottingDf`], [`lineChartDf`], [`buildGroupSettings`], [`extractGroupSettings`], [`applySettingsToPlottingDf`], [`legendFromPlottingDf`], [`legendFromSettings`]
@@ -59,11 +55,12 @@ lineChartManual = function() {
 #' lineChart(weight ~ Time * Diet, cw34, legendPosition="bottomright", 
 #'   settings=settings, add=TRUE)
 #' #The legend doesn't update, but another legend gets added.
-lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
+lineChart = function(formula, data, settings=NULL, 
 										 centralTendencyType = "mean", errBarType = "SE",
-                     title="", xlab=NULL, ylab=NULL, legendTitle="GROUP_NAME", 
+                     title="", xlab=NULL, ylab=NULL, 
                      xlim=NULL, ylim=NULL,
                      plotXAxis=TRUE, plotYAxis=TRUE,
+										 legendPosition="CHOOSE_BEST", legendTitle="GROUP_NAME", 
                      lwd.axes=par()$lwd, add=FALSE, xOrder = NULL,
 										 replicate = NULL, repFun = mean,
                      ...) 
@@ -73,17 +70,19 @@ lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
                             xOrder = xOrder, replicate = replicate, repFun = repFun)
   
   lineChartDf(plotDf, title=title, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim,
-                plotXAxis=plotXAxis, plotYAxis=plotYAxis, lwd.axes=lwd.axes, add=add)
+              plotXAxis=plotXAxis, plotYAxis=plotYAxis, 
+              legendPosition = legendPosition, legendTitle = legendTitle,
+              lwd.axes=lwd.axes, add=add)
   
-  if (!is.null(legendPosition)) {
-    if (!is.null(legendTitle) && (legendTitle == "GROUP_NAME")) {
-      legendTitle = attr(plotDf, "originalNames", exact=TRUE)$group
-    }
+  #if (!is.null(legendPosition)) {
+  #  if (!is.null(legendTitle) && (legendTitle == "GROUP_NAME")) {
+  #    legendTitle = attr(plotDf, "originalNames", exact=TRUE)$group
+  #  }
   	# Only plot legend if there is more than one group
-  	if (length(unique(plotDf$group)) > 1) {
-    	legendFromPlottingDf(legendPosition, plotDf, title=legendTitle, ...=...)
-  	}
-  }
+  #	if (length(unique(plotDf$group)) > 1) {
+  #  	legendFromPlottingDf(legendPosition, plotDf, title=legendTitle, ...=...)
+  #	}
+  #}
   invisible(plotDf)
 }
 
@@ -106,9 +105,9 @@ lineChart = function(formula, data, settings=NULL, legendPosition="CHOOSE_BEST",
 #' @param errBarType The type of error bar to use. Can be "SE" for standard error, "SD" for standard deviation, "CI95" for a 95% confidence interval, or "Cred95" for 95% credible interval. If `NULL`, no error bars are created. If a function is supplied, the function should take one vector argument, which is the data used to plot a single data point. It should return either 1) a length-2 vector or 2) a list with two elements. If returning 1), the values in the vector should be distances from the central tendency measure that the error bars should be drawn (i.e. they should be more-or-less centered on 0). If returning 2), the list should contain \code{eb}, which is either a) error bar distances OR b) error bar endpoints, and \code{includesCenter}, which indicates whether `eb` is distances or endpoints. If `eb` is distances, then it does not include the center, so `includesCenter` should be `FALSE`. If `eb` is endpoints, then it does include the center, so `includesCenter` should be `TRUE`.
 #' @param xOrder The order in which to plot the x variable. A character vector containing all of the levels of the x variable in the order in which they should be plotted. If the `x` variable is numeric or can be coerced to numeric, this argument does nothing.
 #' @param replicate The name of a column in `data` providing indices for replicates (e.g. a participant number). The data will be aggregated for each replicate with `repFun` before being plotted. Do not include the replicate column in `formula`.
-#' @param repFun Used to aggregate values for each replicate.
+#' @param repFun A function that is used to aggregate values for each replicate. Defaults to `mean`.
 #' 
-#' @return A data frame which can be plotted with [`lineChartDf`]. See the documentation for lineChartDf for examples.
+#' @return A `data.frame` which can be plotted with [`lineChartDf`]. See the documentation for lineChartDf for examples.
 #' @md
 #' @export
 #' 
@@ -162,7 +161,7 @@ createPlottingDf = function(formula, data,
 	
 	if (!is.null(replicate)) {
 	  f2 = stats::update.formula(formula, paste0(". ~ . * ", replicate))
-	  data = aggregate(f2, data, centralTendencyFunction)
+	  data = aggregate(f2, data, repFun)
 	}
 	
   mf = model.frame(formula=formula, data=data)
@@ -337,8 +336,11 @@ createPlottingDf = function(formula, data,
 #' @param ylim The plotting range of the y-axis.
 #' @param plotXAxis Should the x-axis be plotted?
 #' @param plotYAxis Should the y-axis be plotted?
+#' @param legendPosition The position at which the legend should be placed. If NULL, no legend is plotted. If "CHOOSE_BEST", the best legend position is selected. Otherise, it is passed through to legend() directly.
+#' @param legendTitle The title to be used in the legend box. If "GROUP_NAME" (default), the name of the source of data for the grouping variable will be used. If no legend title is desired, use `NULL`.
 #' @param lwd.axes The line width of the axes and box around the plotting area.
 #' @param add If FALSE, a new plot will be started and the data plotted in it. If TRUE, the data will be plotted in the current plotting device, if any.
+#' @param ... Additional parameters, currently passed on to the legend creating functions.
 #' 
 #' @md
 #' @export
@@ -358,7 +360,8 @@ lineChartDf = function(plotDf,
                        title="", xlab=NULL, ylab=NULL, 
                        ylim=NULL, xlim=NULL,
                        plotXAxis=TRUE, plotYAxis=TRUE,
-                       lwd.axes=par()$lwd, add=FALSE)
+                       legendPosition = "CHOOSE_BEST", legendTitle = "GROUP_NAME",
+                       lwd.axes=par()$lwd, add=FALSE, ...)
 {
   
   originalNames = attr(plotDf, "originalNames", exact=TRUE)
@@ -395,6 +398,8 @@ lineChartDf = function(plotDf,
     
   }
   
+
+  
   if (!add) { #Start a new plot
     plot.default(x=plotDf$x, y=plotDf$y, ylim=ylim, xlim=xlim, xlab="", 
                  ylab="", type='n', main=title, axes=FALSE )
@@ -417,6 +422,17 @@ lineChartDf = function(plotDf,
     }
     
     box(lwd=lwd.axes)
+  }
+  
+  # Draw legend before points so points are always visible
+  if (!is.null(legendPosition)) {
+    if (!is.null(legendTitle) && (legendTitle == "GROUP_NAME")) {
+      legendTitle = attr(plotDf, "originalNames", exact=TRUE)$group
+    }
+    # Only plot legend if there is more than one group
+    if (length(unique(plotDf$group)) > 1) {
+      legendFromPlottingDf(legendPosition, plotDf, title=legendTitle, ...=...)
+    }
   }
   
   # Draw error bars

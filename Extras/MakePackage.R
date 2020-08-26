@@ -83,7 +83,7 @@ quartiles = function(x) {
 }
 
 
-lineChart(weight ~ Time * Diet, data, errBarType = quartiles, centralTendencyType = "median")
+lineChart(weight ~ Time * Diet, dd, errBarType = quartiles, centralTendencyType = "median")
 
 
 ###

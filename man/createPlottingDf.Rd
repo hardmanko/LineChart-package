@@ -30,10 +30,10 @@ createPlottingDf(
 
 \item{replicate}{The name of a column in \code{data} providing indices for replicates (e.g. a participant number). The data will be aggregated for each replicate with \code{repFun} before being plotted. Do not include the replicate column in \code{formula}.}
 
-\item{repFun}{Used to aggregate values for each replicate.}
+\item{repFun}{A function that is used to aggregate values for each replicate. Defaults to \code{mean}.}
 }
 \value{
-A data frame which can be plotted with \code{\link{lineChartDf}}. See the documentation for lineChartDf for examples.
+A \code{data.frame} which can be plotted with \code{\link{lineChartDf}}. See the documentation for lineChartDf for examples.
 }
 \description{
 This function creates a data frame that can be used for plotting
